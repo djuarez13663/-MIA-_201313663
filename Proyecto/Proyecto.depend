@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1469769327 source:/home/daniel/Escritorio/Archivos/Proyecto/Proyecto/main.c
+1469771749 source:/home/daniel/Escritorio/Archivos/Proyecto/Proyecto/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -9,7 +9,7 @@
 	<dir.h>
 	"Disco.h"
 
-1469769982 /home/daniel/Escritorio/Archivos/Proyecto/Proyecto/Disco.h
+1469772288 /home/daniel/Escritorio/Archivos/Proyecto/Proyecto/Disco.h
 	<stdio.h>
 	<time.h>
 
