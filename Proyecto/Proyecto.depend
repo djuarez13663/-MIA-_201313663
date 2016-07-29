@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1469769327 source:/home/daniel/Escritorio/Archivos/Proyecto/Proyecto/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+	<sys/stat.h>
+	<sys/dir.h>
+	<dir.h>
+	"Disco.h"
+
+1469769982 /home/daniel/Escritorio/Archivos/Proyecto/Proyecto/Disco.h
+	<stdio.h>
+	<time.h>
+
