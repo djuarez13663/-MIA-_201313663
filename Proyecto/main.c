@@ -13,6 +13,7 @@
 
 void IngresarCom();
 void CrearDisco(char* com);
+void BorrarDisco(char* com);
 
 //***************************************
 
@@ -61,6 +62,8 @@ void IngresarCom(){
     // *************** CREAR DISCO ********************
     if(strstr(comAux,"mkdisk")!=NULL){
         CrearDisco(comFinal);
+    }else if(strstr(comAux,"rmdisk")!=NULL){
+        BorrarDisco(comFinal);
     }
 
 }
@@ -106,7 +109,7 @@ void CrearDisco(char* com){
 
             int b = 0;
 
-            for(int c = 0; c<199; c++){
+            for(int c = 0; c<200; c++){
                 path[c] = '\0';
             }
 
@@ -123,7 +126,7 @@ void CrearDisco(char* com){
             parametro = strtok(NULL, " ::");
             strcpy(auxName,parametro);
             int c = 0;
-            for(int a = 0; a < 99; a++){
+            for(int a = 0; a < 100; a++){
                 name[a] = '\0';
             }
             for(int b = 1; b < (strlen(auxName)-1); b++){
@@ -131,7 +134,7 @@ void CrearDisco(char* com){
                 c++;
             }
             if(strstr(name,".dsk")!=NULL){
-                strcat(path,"/");
+                //strcat(path,"/");
                 strcat(path,name);
 
             }else{
@@ -163,9 +166,9 @@ void CrearDisco(char* com){
                 int tam = 0;
 
                 if(unit == 'k'){
-                    tam = size * 1000;
+                    tam = size * 1024;
                 }else{
-                    tam = size * 1000 * 1000;
+                    tam = size * 1024 * 1024;
                 }
 
                 for(int a = 0; a < tam; a++){
@@ -189,6 +192,44 @@ void CrearDisco(char* com){
 
 }
 
+void BorrarDisco(char* com){
+    int error = 0;
+    char path[200];
+    char auxPath[200];
+    char* parametro;
+    parametro = strtok(com," ::");
+    // **************** SEPARAR PARAMETROS *****************
+    while(parametro != NULL){
+        if(strcasecmp(parametro,"-path")==0){
+            parametro = strtok(NULL, " ::");
+            strcpy(auxPath,parametro);
+            for(int a = 0; a < 200; a++){
+                path[a] = '\0';
+            }
+            int c = 0;
+            for(int b = 1; b < (strlen(auxPath)-1); b++){
+                path[c] = auxPath[b];
+                c++;
+            }
+        }else if(strcasecmp(parametro,"rmdisk")==0){
+
+        }else{
+            printf("Error: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
+            error = 1;
+            break;
+        }
+
+        parametro = strtok(NULL," ::");
+    }
+
+    if(error == 0){
+        if(remove(path) == 0){
+            printf("Se ha eliminado el Disco.\n");
+        }else{
+            printf("El Disco no Existe.\n");
+        }
+    }
+}
 
 
 
