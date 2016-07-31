@@ -14,6 +14,7 @@
 void IngresarCom();
 void CrearDisco(char* com);
 void BorrarDisco(char* com);
+void ManejarParticiones(char* com);
 
 //***************************************
 
@@ -64,6 +65,8 @@ void IngresarCom(){
         CrearDisco(comFinal);
     }else if(strstr(comAux,"rmdisk")!=NULL){
         BorrarDisco(comFinal);
+    }else if(strstr(comAux,"fdisk")!=NULL){
+        ManejarParticiones(comFinal);
     }
 
 }
@@ -88,7 +91,7 @@ void CrearDisco(char* com){
             parametro = strtok(NULL," ::");
             size = atoi(parametro);
             if(size < 1){
-                printf("Error: El tamaño del archivo debe ser mayor a 0\n");
+                printf("ERROR: El tamaño del archivo debe ser mayor a 0\n");
                 error = 1;
                 break;
             }
@@ -98,7 +101,7 @@ void CrearDisco(char* com){
             unit = parametro[0];
             unit = tolower(unit);
             if((unit != 'k')&&(unit != 'm')){
-                printf("Error: Unidad \"%c\" no disponible.\n",unit);
+                printf("ERROR: Unidad \"%c\" no disponible.\n",unit);
                 error = 1;
                 break;
             }
@@ -138,7 +141,7 @@ void CrearDisco(char* com){
                 strcat(path,name);
 
             }else{
-                printf("Error: Extension del disco debe ser .dsk\n");
+                printf("ERROR: Extension del disco debe ser .dsk\n");
                 error = 1;
                 break;
             }
@@ -146,7 +149,7 @@ void CrearDisco(char* com){
         }else if(strcasecmp(parametro,"mkdisk")==0){
 
         }else{
-            printf("Error: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
+            printf("ERROR: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
             error = 1;
             break;
         }
@@ -159,7 +162,7 @@ void CrearDisco(char* com){
             FILE *arch = fopen(path,"rb+");
             if(arch){
                 fclose(arch);
-                printf("Error: Disco ya Existe\n");
+                printf("ERROR: Disco ya Existe\n");
             }else{
                 FILE *arch1 = fopen(path,"wb");
 
@@ -186,7 +189,7 @@ void CrearDisco(char* com){
                 printf("Disco Creado\n");
             }
         }else{
-            printf("Error: Faltan parametros obligatorios.\n");
+            printf("ERROR: Faltan parametros obligatorios.\n");
         }
     }
 
@@ -214,7 +217,7 @@ void BorrarDisco(char* com){
         }else if(strcasecmp(parametro,"rmdisk")==0){
 
         }else{
-            printf("Error: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
+            printf("ERROR: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
             error = 1;
             break;
         }
@@ -231,7 +234,137 @@ void BorrarDisco(char* com){
     }
 }
 
+void ManejarParticiones(char* com){
+    // *********** VARIABLES ************
+    int error = 0;
+    char* parametro;
 
+    int size = 0;
+    char unit = 'k';
+    char path[200];
+    char type = 'p';
+    char fit = 'w';
+    char name[50];
+
+    // *********** BANDERAS ************
+    int flagsize = 0;
+    int flagpath = 0;
+    int flagname = 0;
+    int flagadd = 0;
+    int flagdelete = 0;
+
+    // *********** AUXILIARES ***********
+    char auxPath[200];
+    char auxName[50];
+
+    parametro = strtok(com," ::");
+
+
+
+    while(parametro != NULL){
+        if(strcasecmp(parametro,"-size")==0){
+            parametro = strtok(NULL, " ::");
+            size = atoi(parametro);
+            if(size < 1){
+                printf("ERROR: El tamaño del archivo debe ser mayor a 0\n");
+                error = 1;
+                break;
+            }
+            flagsize = 1;
+        }else if(strcasecmp(parametro,"+unit")==0){
+            parametro = strtok(NULL," ::");
+            unit = parametro[0];
+            unit = tolower(unit);
+            if((unit != 'k')&&(unit != 'm')&&(unit != 'b')){
+                printf("ERROR: Unidad \"%c\" no disponible.\n",unit);
+                error = 1;
+                break;
+            }
+        }else if(strcasecmp(parametro,"-path")==0){
+            parametro = strtok(NULL," ::");
+            strcpy(auxPath,parametro);
+            for(int a = 0; a < 200; a++){
+                path[a] = '\0';
+            }
+            int c = 0;
+            for(int b = 1; b < (strlen(auxPath)-1); b++){
+                path[c] = auxPath[b];
+                c++;
+            }
+
+            FILE *arch = fopen(path,"rb");
+            if(arch){
+                fclose(arch);
+            }else{
+                printf("ERROR: El Disco Seleccionado No Existe");
+                error = 1;
+                break;
+            }
+            flagpath = 1;
+        }else if(strcasecmp(parametro,"+type")==0){
+            parametro = strtok(NULL," ::");
+            type = parametro[0];
+            type = tolower(type);
+            if((type != 'p')&&(type != 'e')&&(type != 'l')){
+                printf("ERROR: Tipo de Particion \"%c\" no Admitida.\n",type);
+                error = 1;
+                break;
+            }
+        }else if(strcasecmp(parametro,"+fit")==0){
+            parametro = strtok(NULL," ::");
+            fit = parametro[0];
+            fit = tolower(fit);
+            if((strcasecmp(parametro,"bf")!=0)&&(strcasecmp(parametro,"ff")!=0)&&(strcasecmp(parametro,"wf")!=0)){
+                printf("ERROR: Fit de Particion \"%s\" no Admitido.\n",parametro);
+                error = 1;
+                break;
+            }
+        }else if(strcasecmp(parametro,"+delete")==0){
+            parametro = strtok(NULL," ::");
+
+        }else if(strcasecmp(parametro,"-name")==0){
+            parametro = strtok(NULL," ::");
+            strcpy(auxName,parametro);
+            for(int a = 0; a < 50; a++){
+                name[a] = '\0';
+            }
+            int c = 0;
+            for(int b = 1; b < (strlen(auxName)-1); b++){
+                name[c] = auxName[b];
+                c++;
+            }
+            flagname = 1;
+        }else if(strcasecmp(parametro,"+add")==0){
+            parametro = strtok(NULL," ::");
+        }else if(strcasecmp(parametro,"fdisk")==0){
+
+        }else{
+            printf("ERROR: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
+            error = 1;
+            break;
+        }
+
+        parametro = strtok(NULL, " ::");
+    }
+
+    if(error == 0){
+        if((flagadd == 0)&&(flagdelete == 1)){
+            // *********** SE ELIMINA PARTICION **********
+        }else if((flagadd == 1)&&(flagdelete == 0)){
+            // *********** SE MODIFICA PARTICION *********
+        }else if((flagadd == 0)&&(flagdelete == 0)){
+            // *********** SE CREA LA PARTICION **********
+            if((flagname == 1)&&(flagpath == 1)&&(flagsize == 1)){
+                FILE *disco = fopen(path,"rb+");
+                MBR auxPart;
+                fseek(disco,0,SEEK_SET);
+                CreateParticion(auxPart,size,fit,name,type);
+            }else{
+                printf("ERROR: Faltan Parametros Obligatorios para Crear Particion.\n");
+            }
+        }
+    }
+}
 
 
 

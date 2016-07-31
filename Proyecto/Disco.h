@@ -27,7 +27,7 @@ void CreateMBR(MBR nuevo,int size){
     strcpy(nuevo.fecha_creacion_mbr,salida);
     int semilla = time(NULL);
     srand(semilla);
-    nuevo.disk_signature_mbr = rand()%100 + 1;
+    nuevo.disk_signature_mbr = rand()%1000 + 1;
 
     for(int a = 0; a < 4; a++){
         strcpy(nuevo.partition_table[a].name,"Vacia");
@@ -36,5 +36,15 @@ void CreateMBR(MBR nuevo,int size){
         nuevo.partition_table[a].part_start = -1;
         nuevo.partition_table[a].part_status = '0';
         nuevo.partition_table[a].part_type = '\0';
+    }
+}
+
+void CreateParticion(MBR disco,int size,char fit, char* name,char tipo){
+    if(tipo == 'p'){
+
+    }else if(tipo == 'e'){
+
+    }else{
+
     }
 }
