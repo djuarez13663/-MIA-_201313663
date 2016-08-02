@@ -179,11 +179,15 @@ void CrearDisco(char* com){
                     fwrite("\0",sizeof(char),1,arch1);
                 }
 
-                MBR nuevo;
-                CreateMBR(nuevo,tam);
 
-                fseek(arch1,0,SEEK_SET);
-                fwrite(&nuevo,sizeof(MBR),1,arch1);
+                CreateMBR(arch1,tam);
+                //printf("disco.disk_signature_mbr = %d\n",nuevo.disk_signature_mbr);
+                //printf("disco.fecha_creacion_mbr = %s\n",nuevo.fecha_creacion_mbr);
+                //printf("disco.tamano_mbr = %d\n",nuevo.tamano_mbr);
+                //fseek(arch1,0,SEEK_SET);
+                //fwrite(&nuevo,sizeof(MBR),1,arch1);
+
+
 
                 fclose(arch1);
                 printf("Disco Creado\n");
@@ -348,6 +352,13 @@ void ManejarParticiones(char* com){
     }
 
     if(error == 0){
+        // *********** AJUSTAR TAMANO ******
+        if(unit == 'k'){
+            size = size * 1024;
+        }else if(unit == 'm'){
+            size = size * 1024 * 1024;
+        }
+        // *********** ACCION **************
         if((flagadd == 0)&&(flagdelete == 1)){
             // *********** SE ELIMINA PARTICION **********
         }else if((flagadd == 1)&&(flagdelete == 0)){
@@ -356,9 +367,14 @@ void ManejarParticiones(char* com){
             // *********** SE CREA LA PARTICION **********
             if((flagname == 1)&&(flagpath == 1)&&(flagsize == 1)){
                 FILE *disco = fopen(path,"rb+");
-                MBR auxPart;
-                fseek(disco,0,SEEK_SET);
-                CreateParticion(auxPart,size,fit,name,type);
+                //MBR auxPart;
+                //fseek(disco,0,SEEK_SET);
+                //fread(&auxPart,sizeof(MBR),1,disco);
+                CreateParticion(disco,size,fit,name,type);
+                //VerParticiones(disco);
+                fclose(disco);
+
+
             }else{
                 printf("ERROR: Faltan Parametros Obligatorios para Crear Particion.\n");
             }
@@ -366,10 +382,20 @@ void ManejarParticiones(char* com){
     }
 }
 
-
-
-
-
-
+void VerParticiones(FILE* disco){
+    MBR auxPart;
+    fseek(disco,0,SEEK_SET);
+    fread(&auxPart,sizeof(MBR),1,disco);
+    printf("******************************************************\n");
+    for(int a = 0; a < 4; a++){
+        if(auxPart.partition_table[a].part_status != '0'){
+            printf("Particion.name = %s\n",auxPart.partition_table[a].name);
+            printf("Particion.part_type = %c\n",auxPart.partition_table[a].part_type);
+            printf("Particion.part_size = %d\n",auxPart.partition_table[a].part_size);
+            printf("Particion.part_start = %d\n",auxPart.partition_table[a].part_start);
+            printf("******************************************************\n");
+        }
+    }
+}
 
 
