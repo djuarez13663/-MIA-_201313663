@@ -23,6 +23,7 @@ int getCountPartition(MBR disco);
 int getPosNuevaPart(MBR disco);
 int getInitPartition(MBR disco,int _size);
 void OrderPartitions(MBR disco);
+int ExistExtended(MBR disco);
 
 void CreateMBR(FILE *arch,int size){
     MBR nuevo;
@@ -61,20 +62,25 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
     if(tipo == 'p'){
         if((auxPart.partition_table[0].part_status == '0')&&(getCountPartition(auxPart)==0)){
             // NUEVA PARTICION
-            PARTICION nueva;
-            strcpy(nueva.name,name);
-            nueva.part_fit = fit;
-            nueva.part_size = _size;
-            nueva.part_start = sizeof(MBR) + 1;
-            nueva.part_status = '1';
-            nueva.part_type = tipo;
-            // POSICION EN EL ARREGLO
-            auxPart.partition_table[0] = nueva;
-            // ORDENAMOS EL ARREGLO
-            OrderPartitions(auxPart);
-            //ESCRIBIMOS EL ARCHIVO
-            fseek(arch,0,SEEK_SET);
-            fwrite(&auxPart,sizeof(MBR),1,arch);
+            if(_size <= auxPart.tamano_mbr){
+                PARTICION nueva;
+                strcpy(nueva.name,name);
+                nueva.part_fit = fit;
+                nueva.part_size = _size;
+                nueva.part_start = sizeof(MBR) + 1;
+                nueva.part_status = '1';
+                nueva.part_type = tipo;
+                // POSICION EN EL ARREGLO
+                auxPart.partition_table[0] = nueva;
+                // ORDENAMOS EL ARREGLO
+                OrderPartitions(auxPart);
+                //ESCRIBIMOS EL ARCHIVO
+                fseek(arch,0,SEEK_SET);
+                fwrite(&auxPart,sizeof(MBR),1,arch);
+            }else{
+                printf("ERROR: No Hay Espacio Suficiente Para Esa Particion.\n");
+            }
+
         }else{
             int pos = getPosNuevaPart(auxPart);
             if(pos != -1){
@@ -105,21 +111,56 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
         }
     }else if(tipo == 'e'){
         if(auxPart.partition_table[0].part_status == '0'){
-            // PARTICION NUEVA
-            PARTICION nueva;
-            strcpy(nueva.name,name);
-            nueva.part_fit = fit;
-            nueva.part_size = _size;
-            nueva.part_start = sizeof(MBR) + 1;
-            nueva.part_status = '1';
-            nueva.part_type = tipo;
-            // POSICION EN EL ARREGLO
-            auxPart.partition_table[0] = nueva;
-            // ORDENAMOS EL ARREGLO
-            OrderPartitions(auxPart);
-            // ESCRIBIMOS EL ARCHIVO
-            fseek(arch,0,SEEK_SET);
-            fwrite(&auxPart,sizeof(MBR),1,arch);
+            if(_size <= auxPart.tamano_mbr){
+                // PARTICION NUEVA
+                PARTICION nueva;
+                strcpy(nueva.name,name);
+                nueva.part_fit = fit;
+                nueva.part_size = _size;
+                nueva.part_start = sizeof(MBR) + 1;
+                nueva.part_status = '1';
+                nueva.part_type = tipo;
+                // POSICION EN EL ARREGLO
+                auxPart.partition_table[0] = nueva;
+                // ORDENAMOS EL ARREGLO
+                OrderPartitions(auxPart);
+                // ESCRIBIMOS EL ARCHIVO
+                fseek(arch,0,SEEK_SET);
+                fwrite(&auxPart,sizeof(MBR),1,arch);
+            }else{
+                printf("ERROR: No Hay Espacio Suficiente Para Esa Particion.\n");
+            }
+
+        }else{
+            int pos = getPosNuevaPart(auxPart);
+            if(pos != -1){
+                if(ExistExtended(auxPart) == 0){
+                    int start = getInitPartition(auxPart,_size);
+                    if(start != -1){
+                        // PARTICION NUEVA
+                        PARTICION nueva;
+                        strcpy(nueva.name,name);
+                        nueva.part_fit = fit;
+                        nueva.part_size = _size;
+                        nueva.part_start = start;
+                        nueva.part_status = '1';
+                        nueva.part_type = tipo;
+                        // POSICION EN EL ARREGLO
+                        auxPart.partition_table[pos] = nueva;
+                        // ORDENAMOS EL ARREGLO
+                        OrderPartitions(auxPart);
+                        // ESCRIBIMOS EL ARCHIVO
+                        fseek(arch,0,SEEK_SET);
+                        fwrite(&auxPart,sizeof(MBR),1,arch);
+                    }else{
+                        printf("ERROR: No Hay Espacio Suficiente Para Esa Particion.\n");
+                    }
+                }else{
+                    printf("ERROR: Ya Existe Una Particion Extendida En El Disco.\n");
+                }
+            }else{
+                printf("ERROR: No Hay Espacio Para Mas Particiones.\n");
+            }
         }
     }else{
 
@@ -135,7 +176,7 @@ int getCountPartition(MBR disco){
             count++;
         }
     }
-    printf("Count: %d\n",count);
+    //printf("Count: %d\n",count);
     return count;
 }
 
@@ -178,10 +219,6 @@ int getInitPartition(MBR disco,int _size){
 }
 
 void OrderPartitions(MBR disco){
-
-int ExistExtended(MBR disco){
-
-}
     for(int a = 0; a < 4; a++){
         for(int b = 0; b < 3; b++){
             if(disco.partition_table[b].part_status != '0'){
@@ -200,3 +237,14 @@ int ExistExtended(MBR disco){
         }
     }
 }
+
+int ExistExtended(MBR disco){
+    int exists = 0;
+    for(int a = 0; a < 4; a++){
+        if(disco.partition_table[a].part_type == 'e'){
+            exists = 1;
+        }
+    }
+    return exists;
+}
+

@@ -121,9 +121,14 @@ void CrearDisco(char* com){
                     b++;
             }
 
-            if(mkdir(path,S_IRWXU)==0){
-                printf("Se creo la carpeta: %s\n",auxPath);
-            }
+//            if(mkdir(path,S_IRWXU)==0){
+//                printf("Se creo la carpeta: %s\n",auxPath);
+//            }
+            char mkdirCommand[300];
+            strcpy(mkdirCommand,"");
+            strcat(mkdirCommand,"mkdir -p ");
+            strcat(mkdirCommand,path);
+            system(mkdirCommand);
             flagpath = 1;
         }else if(strcasecmp(parametro,"-name")==0){
             parametro = strtok(NULL, " ::");
@@ -300,7 +305,7 @@ void ManejarParticiones(char* com){
             if(arch){
                 fclose(arch);
             }else{
-                printf("ERROR: El Disco Seleccionado No Existe");
+                printf("ERROR: El Disco Seleccionado No Existe.\n");
                 error = 1;
                 break;
             }
@@ -370,8 +375,13 @@ void ManejarParticiones(char* com){
                 //MBR auxPart;
                 //fseek(disco,0,SEEK_SET);
                 //fread(&auxPart,sizeof(MBR),1,disco);
-                CreateParticion(disco,size,fit,name,type);
-                //VerParticiones(disco);
+                if(ExistsPartition(disco,name) == 0){
+                    CreateParticion(disco,size,fit,name,type);
+                    VerParticiones(disco);
+                }else{
+                    printf("ERROR: Ya Existe Una Particion Con Ese Nombre.\n");
+                }
+
                 fclose(disco);
 
 
@@ -396,6 +406,22 @@ void VerParticiones(FILE* disco){
             printf("******************************************************\n");
         }
     }
+}
+
+int ExistsPartition(FILE *disco,char* name){
+    MBR auxPart;
+    fseek(disco,0,SEEK_SET);
+    fread(&auxPart,sizeof(MBR),1,disco);
+
+    int exists = 0;
+
+    for(int a = 0; a < 4; a++){
+        if(strcasecmp(auxPart.partition_table[a].name,name)==0){
+            exists = 1;
+        }
+    }
+
+    return exists;
 }
 
 
