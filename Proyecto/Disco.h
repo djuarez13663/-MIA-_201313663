@@ -17,13 +17,18 @@ typedef struct mbr{
     PARTICION partition_table[4];
 }MBR;
 
+typedef struct ebr{
+
+}EBR;
+
 void CreateMBR(FILE *arch,int size);
 void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo);
 int getCountPartition(MBR disco);
 int getPosNuevaPart(MBR disco);
 int getInitPartition(MBR disco,int _size);
-void OrderPartitions(MBR disco);
+void OrderPartitions(MBR *disco);
 int ExistExtended(MBR disco);
+void Delete_Partition(FILE *disco,char* name,char* type_delete);
 
 void CreateMBR(FILE *arch,int size){
     MBR nuevo;
@@ -73,7 +78,7 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
                 // POSICION EN EL ARREGLO
                 auxPart.partition_table[0] = nueva;
                 // ORDENAMOS EL ARREGLO
-                OrderPartitions(auxPart);
+                OrderPartitions(&auxPart);
                 //ESCRIBIMOS EL ARCHIVO
                 fseek(arch,0,SEEK_SET);
                 fwrite(&auxPart,sizeof(MBR),1,arch);
@@ -97,7 +102,7 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
                     // POSICION EN EL ARREGLO
                     auxPart.partition_table[pos] = nueva;
                     // ORDENAMOS EL ARREGLO
-                    OrderPartitions(auxPart);
+                    OrderPartitions(&auxPart);
                     // ESCRIBIMOS EL ARCHIVO
                     fseek(arch,0,SEEK_SET);
                     fwrite(&auxPart,sizeof(MBR),1,arch);
@@ -123,7 +128,7 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
                 // POSICION EN EL ARREGLO
                 auxPart.partition_table[0] = nueva;
                 // ORDENAMOS EL ARREGLO
-                OrderPartitions(auxPart);
+                OrderPartitions(&auxPart);
                 // ESCRIBIMOS EL ARCHIVO
                 fseek(arch,0,SEEK_SET);
                 fwrite(&auxPart,sizeof(MBR),1,arch);
@@ -148,7 +153,7 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
                         // POSICION EN EL ARREGLO
                         auxPart.partition_table[pos] = nueva;
                         // ORDENAMOS EL ARREGLO
-                        OrderPartitions(auxPart);
+                        OrderPartitions(&auxPart);
                         // ESCRIBIMOS EL ARCHIVO
                         fseek(arch,0,SEEK_SET);
                         fwrite(&auxPart,sizeof(MBR),1,arch);
@@ -197,42 +202,56 @@ int getInitPartition(MBR disco,int _size){
     int start = -1;
     int refe = 0;
     int _max = 0;
-    for(int cont = 0; cont < 3; cont++){
-        if(disco.partition_table[cont].part_status != '0'){
-            refe = disco.partition_table[cont].part_start + disco.partition_table[cont].part_size + 1;
-        }else{
-            break;
-        }
+    int asigno = 0;
 
-        if(disco.partition_table[cont+1].part_status != '0'){
-            _max = disco.partition_table[cont+1].part_start - 1;
-        }else{
-            _max = disco.tamano_mbr;
-        }
-        if((_max - refe) >= _size){
+    if(disco.partition_table[0].part_start != (sizeof(MBR)+1)){
+        refe = sizeof(MBR)+1;
+        _max = disco.partition_table[0].part_start - 1;
+        if((_max - refe)>=_size){
             start = refe;
-            break;
+            asigno = 1;
         }
     }
 
+    if(asigno == 0){
+        for(int cont = 0; cont < 3; cont++){
+            if(disco.partition_table[cont].part_status != '0'){
+                refe = disco.partition_table[cont].part_start + disco.partition_table[cont].part_size + 1;
+            }else{
+                break;
+            }
+
+            if(disco.partition_table[cont+1].part_status != '0'){
+                _max = disco.partition_table[cont+1].part_start - 1;
+            }else{
+                _max = disco.tamano_mbr;
+            }
+            if((_max - refe) >= _size){
+                start = refe;
+                break;
+            }
+        }
+    }
     return start;
 }
 
-void OrderPartitions(MBR disco){
+void OrderPartitions(MBR *disco){
     for(int a = 0; a < 4; a++){
         for(int b = 0; b < 3; b++){
-            if(disco.partition_table[b].part_status != '0'){
-                if(disco.partition_table[b+1].part_status != '0'){
-                    if(disco.partition_table[b].part_start > disco.partition_table[b+1].part_start){
-                        PARTICION temp = disco.partition_table[b];
-                        disco.partition_table[b] = disco.partition_table[b+1];
-                        disco.partition_table[b+1] = temp;
+            if((*disco).partition_table[b].part_status != '0'){
+                if((*disco).partition_table[b+1].part_status != '0'){
+                    if((*disco).partition_table[b].part_start > (*disco).partition_table[b+1].part_start){
+                        PARTICION temp = (*disco).partition_table[b];
+                        (*disco).partition_table[b] = (*disco).partition_table[b+1];
+                        (*disco).partition_table[b+1] = temp;
                     }
                 }
             }else{
-                PARTICION temp = disco.partition_table[b];
-                disco.partition_table[b] = disco.partition_table[b+1];
-                disco.partition_table[b+1] = temp;
+                if((*disco).partition_table[b+1].part_status != '0'){
+                    PARTICION temp = (*disco).partition_table[b];
+                    (*disco).partition_table[b] = (*disco).partition_table[b+1];
+                    (*disco).partition_table[b+1] = temp;
+                }
             }
         }
     }
@@ -248,3 +267,33 @@ int ExistExtended(MBR disco){
     return exists;
 }
 
+void Delete_Partition(FILE *arch,char* name,char* type_delete){
+    MBR disco;
+    fseek(arch,0,SEEK_SET);
+    fread(&disco,sizeof(MBR),1,arch);
+
+    for(int a = 0; a < 4; a++){
+            if(strcmp(disco.partition_table[a].name,name)==0){
+                disco.partition_table[a].part_status = '0';
+
+                if(strcasecmp(type_delete,"full")==0){
+
+                    for(int b = 0; b <= disco.partition_table[a].part_size; a++){
+                        int pos = b + disco.partition_table[a].part_start;
+                        fseek(arch,pos,SEEK_SET);
+                        fwrite("\0",sizeof(char),1,arch);
+                    }
+
+                    strcpy(disco.partition_table[a].name,"Vacia");
+                    disco.partition_table[a].part_fit = '\0';
+                    disco.partition_table[a].part_size = 0;
+                    disco.partition_table[a].part_start = -1;
+                    disco.partition_table[a].part_type = '\0';
+                }
+            }
+    }
+    OrderPartitions(&disco);
+    fseek(arch,0L,SEEK_SET);
+    fwrite(&disco,sizeof(MBR),1,arch);
+
+}

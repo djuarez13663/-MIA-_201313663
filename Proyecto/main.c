@@ -3,8 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include <sys/dir.h>
-#include <dir.h>
+//#include <sys/dir.h>
+//#include <dir.h>
 #include "Disco.h"
 
 //************* VARIABLES ***************
@@ -108,8 +108,25 @@ void CrearDisco(char* com){
 
         }else if(strcasecmp(parametro,"-path")==0){
             parametro = strtok(NULL," ::");
+
+
+            for(int c = 0; c<200; c++){
+                auxPath[c] = '\0';
+            }
+            //printf("%s\n",parametro);
             strcpy(auxPath,parametro);
 
+            auxPath[0] = ' ';
+
+            while(strstr(auxPath,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxPath," ");
+                strcat(auxPath,parametro);
+
+            }
+            auxPath[0] = '\"';
+            //printf("%s")
             int b = 0;
 
             for(int c = 0; c<200; c++){
@@ -124,11 +141,14 @@ void CrearDisco(char* com){
 //            if(mkdir(path,S_IRWXU)==0){
 //                printf("Se creo la carpeta: %s\n",auxPath);
 //            }
+            //strcpy(path,auxPath);
             char mkdirCommand[300];
             strcpy(mkdirCommand,"");
             strcat(mkdirCommand,"mkdir -p ");
-            strcat(mkdirCommand,path);
+            strcat(mkdirCommand,auxPath);
             system(mkdirCommand);
+            //printf("%s\n",path);
+            //printf("%s\n",auxPath);
             flagpath = 1;
         }else if(strcasecmp(parametro,"-name")==0){
             parametro = strtok(NULL, " ::");
@@ -137,6 +157,20 @@ void CrearDisco(char* com){
             for(int a = 0; a < 100; a++){
                 name[a] = '\0';
             }
+
+            //strcpy(auxPath,parametro);
+
+            auxName[0] = ' ';
+
+            while(strstr(auxName,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxName," ");
+                strcat(auxName,parametro);
+
+            }
+            auxName[0] = '\"';
+
             for(int b = 1; b < (strlen(auxName)-1); b++){
                 name[c] = auxName[b];
                 c++;
@@ -218,11 +252,25 @@ void BorrarDisco(char* com){
             for(int a = 0; a < 200; a++){
                 path[a] = '\0';
             }
+
+            auxPath[0] = ' ';
+
+            while(strstr(auxPath,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxPath," ");
+                strcat(auxPath,parametro);
+
+            }
+            auxPath[0] = '\"';
+
             int c = 0;
             for(int b = 1; b < (strlen(auxPath)-1); b++){
                 path[c] = auxPath[b];
                 c++;
             }
+            //printf("%s\n",auxPath);
+            //printf("%s\n",path);
         }else if(strcasecmp(parametro,"rmdisk")==0){
 
         }else{
@@ -235,11 +283,34 @@ void BorrarDisco(char* com){
     }
 
     if(error == 0){
-        if(remove(path) == 0){
+        /*if(remove(path) == 0){
             printf("Se ha eliminado el Disco.\n");
         }else{
             printf("El Disco no Existe.\n");
+        }*/
+        char confirmar[10];
+        printf("Desea Eliminar El Disco? [S/N]: ");
+        fgets(confirmar,10,stdin);
+        confirmar[0] = tolower(confirmar[0]);
+        for(int a = 1; a < 10; a++){
+            confirmar[a] = '\0';
         }
+        if(confirmar[0] == 's'){
+            FILE *arch = fopen(path,"rb");
+            if(arch){
+                fclose(arch);
+                char rmdirCommand[500];
+                strcpy(rmdirCommand,"");
+                strcat(rmdirCommand,"rm ");
+                strcat(rmdirCommand,auxPath);
+                system(rmdirCommand);
+                printf("Disco Eliminado.\n");
+            }else{
+                printf("ERROR: El Disco No Existe.\n");
+            }
+
+        }
+
     }
 }
 
@@ -254,6 +325,7 @@ void ManejarParticiones(char* com){
     char type = 'p';
     char fit = 'w';
     char name[50];
+    char elim[10];
 
     // *********** BANDERAS ************
     int flagsize = 0;
@@ -295,6 +367,18 @@ void ManejarParticiones(char* com){
             for(int a = 0; a < 200; a++){
                 path[a] = '\0';
             }
+
+            auxPath[0] = ' ';
+
+            while(strstr(auxPath,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxPath," ");
+                strcat(auxPath,parametro);
+
+            }
+            auxPath[0] = '\"';
+
             int c = 0;
             for(int b = 1; b < (strlen(auxPath)-1); b++){
                 path[c] = auxPath[b];
@@ -330,13 +414,31 @@ void ManejarParticiones(char* com){
             }
         }else if(strcasecmp(parametro,"+delete")==0){
             parametro = strtok(NULL," ::");
-
+            strcpy(elim,parametro);
+            flagdelete = 1;
+            if((strcasecmp(elim,"fast") != 0)&&(strcasecmp(elim,"full") != 0)){
+                printf("ERROR: Opcion De Eliminacion \"%s\" No Admitida.\n",elim);
+                error = 1;
+                break;
+            }
         }else if(strcasecmp(parametro,"-name")==0){
             parametro = strtok(NULL," ::");
             strcpy(auxName,parametro);
             for(int a = 0; a < 50; a++){
                 name[a] = '\0';
             }
+
+            auxName[0] = ' ';
+
+            while(strstr(auxName,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxName," ");
+                strcat(auxName,parametro);
+
+            }
+            auxName[0] = '\"';
+
             int c = 0;
             for(int b = 1; b < (strlen(auxName)-1); b++){
                 name[c] = auxName[b];
@@ -366,6 +468,28 @@ void ManejarParticiones(char* com){
         // *********** ACCION **************
         if((flagadd == 0)&&(flagdelete == 1)){
             // *********** SE ELIMINA PARTICION **********
+            if((flagname == 1)&&(flagpath == 1)){
+                char confirmar[10];
+                printf("Desea Eliminar El Disco? [S/N]: ");
+                fgets(confirmar,10,stdin);
+                confirmar[0] = tolower(confirmar[0]);
+                for(int a = 1; a < 10; a++){
+                    confirmar[a] = '\0';
+                }
+                if(confirmar[0] == 's'){
+                    FILE *disco = fopen(path,"rb+");
+                    if(ExistsPartition(disco,name) == 1){
+                        Delete_Partition(disco,name,elim);
+                        VerParticiones(disco);
+
+                    }else{
+                        printf("ERROR: La Particion A Eliminar No Existe.\n");
+                    }
+                    fclose(disco);
+                }
+            }else{
+                printf("ERROR: Faltan Parametros Obligatorios Para Eliminar Particion.\n");
+            }
         }else if((flagadd == 1)&&(flagdelete == 0)){
             // *********** SE MODIFICA PARTICION *********
         }else if((flagadd == 0)&&(flagdelete == 0)){
@@ -416,12 +540,13 @@ int ExistsPartition(FILE *disco,char* name){
     int exists = 0;
 
     for(int a = 0; a < 4; a++){
-        if(strcasecmp(auxPart.partition_table[a].name,name)==0){
-            exists = 1;
+        if((strcmp(auxPart.partition_table[a].name,name)==0)){
+            if(auxPart.partition_table[a].part_status == '1'){
+                exists = 1;
+            }
         }
     }
 
     return exists;
 }
-
 
