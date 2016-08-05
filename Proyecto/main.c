@@ -528,6 +528,32 @@ void VerParticiones(FILE* disco){
             printf("Particion.part_size = %d\n",auxPart.partition_table[a].part_size);
             printf("Particion.part_start = %d\n",auxPart.partition_table[a].part_start);
             printf("******************************************************\n");
+            if(auxPart.partition_table[a].part_type == 'e'){
+                EBR auxEBR;
+                fseek(disco,auxPart.partition_table[a].part_start,SEEK_SET);
+                fread(&auxEBR,sizeof(EBR),1,disco);
+                if(auxEBR.part_next != -1){
+                    fseek(disco,auxEBR.part_next,SEEK_SET);
+                    fread(&auxEBR,sizeof(EBR),1,disco);
+                    while(auxEBR.part_next != -1){
+                        printf("Partition.name = %s\n",auxEBR.part_name);
+                        printf("Partition.part_type = l\n");
+                        printf("Partition.part_size = %d\n",auxEBR.part_size);
+                        printf("Partition.part_start = %d\n",auxEBR.part_start);
+                        printf("Partition.part_next = %d\n",auxEBR.part_next);
+                        printf("******************************************************\n");
+                        fseek(disco,auxEBR.part_next,SEEK_SET);
+                        fread(&auxEBR,sizeof(EBR),1,disco);
+                    }
+
+                    printf("Partition.name = %s\n",auxEBR.part_name);
+                    printf("Partition.part_type = l\n");
+                    printf("Partition.part_size = %d\n",auxEBR.part_size);
+                    printf("Partition.part_start = %d\n",auxEBR.part_start);
+                    printf("Partition.part_next = %d\n",auxEBR.part_next);
+                    printf("******************************************************\n");
+                }
+            }
         }
     }
 }

@@ -18,7 +18,12 @@ typedef struct mbr{
 }MBR;
 
 typedef struct ebr{
-
+    char part_status;
+    char part_fit;
+    int part_start;
+    int part_size;
+    int part_next;
+    char part_name[16];
 }EBR;
 
 void CreateMBR(FILE *arch,int size);
@@ -29,6 +34,7 @@ int getInitPartition(MBR disco,int _size);
 void OrderPartitions(MBR *disco);
 int ExistExtended(MBR disco);
 void Delete_Partition(FILE *disco,char* name,char* type_delete);
+void getInitLogic(FILE *arch, int _size, EBR nuevaEBR);
 
 void CreateMBR(FILE *arch,int size){
     MBR nuevo;
@@ -132,6 +138,17 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
                 // ESCRIBIMOS EL ARCHIVO
                 fseek(arch,0,SEEK_SET);
                 fwrite(&auxPart,sizeof(MBR),1,arch);
+                // AGREGAMOS PRIMER EBR
+                EBR nuevaEBR;
+                strcpy(nuevaEBR.part_name,"Inicio");
+                nuevaEBR.part_fit = '\0';
+                nuevaEBR.part_next = -1;
+                nuevaEBR.part_size = sizeof(EBR);
+                nuevaEBR.part_start = nueva.part_start;
+                nuevaEBR.part_status = '0';
+                fseek(arch,nueva.part_start,SEEK_SET);
+                fwrite(&nuevaEBR,sizeof(EBR),1,arch);
+
             }else{
                 printf("ERROR: No Hay Espacio Suficiente Para Esa Particion.\n");
             }
@@ -157,6 +174,16 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
                         // ESCRIBIMOS EL ARCHIVO
                         fseek(arch,0,SEEK_SET);
                         fwrite(&auxPart,sizeof(MBR),1,arch);
+                        // AGREGAMOS PRIMER EBR
+                        EBR nuevaEBR;
+                        strcpy(nuevaEBR.part_name,"Inicio");
+                        nuevaEBR.part_fit = '\0';
+                        nuevaEBR.part_next = -1;
+                        nuevaEBR.part_size = sizeof(EBR);
+                        nuevaEBR.part_start = nueva.part_start;
+                        nuevaEBR.part_status = '0';
+                        fseek(arch,nueva.part_start,SEEK_SET);
+                        fwrite(&nuevaEBR,sizeof(EBR),1,arch);
                     }else{
                         printf("ERROR: No Hay Espacio Suficiente Para Esa Particion.\n");
                     }
@@ -168,7 +195,17 @@ void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo){
             }
         }
     }else{
-
+        // PARTICION LOGICA
+        if(ExistExtended(auxPart)==1){
+            EBR nuevaEBR;
+            nuevaEBR.part_fit = fit;
+            nuevaEBR.part_size = _size;
+            nuevaEBR.part_status = '1';
+            strcpy(nuevaEBR.part_name,name);
+            getInitLogic(arch,_size,nuevaEBR);
+        }else{
+            printf("ERROR: Debe Crear Primero Una Particion Extendida.\n");
+        }
     }
 }
 
@@ -216,7 +253,7 @@ int getInitPartition(MBR disco,int _size){
     if(asigno == 0){
         for(int cont = 0; cont < 3; cont++){
             if(disco.partition_table[cont].part_status != '0'){
-                refe = disco.partition_table[cont].part_start + disco.partition_table[cont].part_size + 1;
+                refe = disco.partition_table[cont].part_start + disco.partition_table[cont].part_size;
             }else{
                 break;
             }
@@ -261,7 +298,9 @@ int ExistExtended(MBR disco){
     int exists = 0;
     for(int a = 0; a < 4; a++){
         if(disco.partition_table[a].part_type == 'e'){
-            exists = 1;
+            if(disco.partition_table[a].part_status == '1'){
+                exists = 1;
+            }
         }
     }
     return exists;
@@ -296,4 +335,76 @@ void Delete_Partition(FILE *arch,char* name,char* type_delete){
     fseek(arch,0L,SEEK_SET);
     fwrite(&disco,sizeof(MBR),1,arch);
 
+}
+
+void getInitLogic(FILE *arch, int _size, EBR nuevaEBR){
+    int start = -1;
+    int asigno = 0;
+    int refe = 0;
+    int _max = 0;
+    MBR disco;
+    fseek(arch,0,SEEK_SET);
+    fread(&disco,sizeof(MBR),1,arch);
+
+    for(int a = 0; a < 4; a++){
+        if((disco.partition_table[a].part_type == 'e')&&(disco.partition_table[a].part_status == '1')){
+            EBR auxEBR;
+            fseek(arch,disco.partition_table[a].part_start,SEEK_SET);
+            fread(&auxEBR,sizeof(EBR),1,arch);
+            if(auxEBR.part_next == -1){
+                refe = disco.partition_table[a].part_start + sizeof(EBR);
+                _max = disco.partition_table[a].part_start + disco.partition_table[a].part_size;
+                if((_max - refe) >= _size){
+                    start = refe;
+                    asigno = 1;
+                    auxEBR.part_next = start;
+                    fseek(arch,disco.partition_table[a].part_start,SEEK_SET);
+                    fwrite(&auxEBR,sizeof(EBR),1,arch);
+                    //EBR nuevaEBR;
+                    nuevaEBR.part_next = -1;
+                    nuevaEBR.part_start = start;
+                    fseek(arch,start,SEEK_SET);
+                    fwrite(&nuevaEBR,sizeof(MBR),1,arch);
+                }
+            }else{
+                while(auxEBR.part_next != -1){
+                    int startAnterior = auxEBR.part_start;
+                    refe = auxEBR.part_start + auxEBR.part_size;
+                    fseek(arch,auxEBR.part_next,SEEK_SET);
+                    fread(&auxEBR,sizeof(EBR),1,arch);
+                    _max = auxEBR.part_start-1;
+                    if((_max - refe) >= _size){
+                        start = refe;
+                        asigno = 1;
+                        fseek(arch,startAnterior,SEEK_SET);
+                        fread(&auxEBR,sizeof(EBR),1,arch);
+                        auxEBR.part_next = start;
+                        fseek(arch,startAnterior,SEEK_SET);
+                        fwrite(&auxEBR,sizeof(EBR),1,arch);
+                        nuevaEBR.part_next = _max +1;
+                        nuevaEBR.part_start = start;
+                        fseek(arch,start,SEEK_SET);
+                        fwrite(&nuevaEBR,sizeof(EBR),1,arch);
+                        break;
+                    }
+                }
+                if(asigno == 0){
+                    refe = auxEBR.part_start + auxEBR.part_size;
+                    _max = disco.partition_table[a].part_start + disco.partition_table[a].part_size;
+                    if((_max - refe) >= _size){
+                        start = refe;
+                        auxEBR.part_next = start;
+                        fseek(arch,auxEBR.part_start,SEEK_SET);
+                        fwrite(&auxEBR,sizeof(EBR),1,arch);
+                        nuevaEBR.part_start = start;
+                        nuevaEBR.part_next = -1;
+                        fseek(arch,start,SEEK_SET);
+                        fwrite(&nuevaEBR,sizeof(EBR),1,arch);
+                    }
+                }
+            }
+        }
+    }
+
+    //return start;
 }
