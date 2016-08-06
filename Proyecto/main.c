@@ -15,6 +15,8 @@ void IngresarCom();
 void CrearDisco(char* com);
 void BorrarDisco(char* com);
 void ManejarParticiones(char* com);
+void VerParticiones(FILE* disco);
+int ExistsPartition(FILE *disco,char* name);
 
 //***************************************
 
@@ -569,6 +571,27 @@ int ExistsPartition(FILE *disco,char* name){
         if((strcmp(auxPart.partition_table[a].name,name)==0)){
             if(auxPart.partition_table[a].part_status == '1'){
                 exists = 1;
+            }
+        }
+        if((auxPart.partition_table[a].part_type == 'e')&&(auxPart.partition_table[a].part_status == '1')){
+            EBR auxEBR;
+            fseek(disco,auxPart.partition_table[a].part_start,SEEK_SET);
+            fread(&auxEBR,sizeof(EBR),1,disco);
+            if(auxEBR.part_next != -1){
+                fseek(disco,auxEBR.part_next,SEEK_SET);
+                fread(&auxEBR,sizeof(EBR),1,disco);
+                while(auxEBR.part_next != -1){
+                    if((strcmp(auxEBR.part_name,name)==0)&&(auxEBR.part_status == '1')){
+                        exists = 1;
+                        //break;
+                    }
+                    fseek(disco,auxEBR.part_next,SEEK_SET);
+                    fread(&auxEBR,sizeof(EBR),1,disco);
+                }
+                if((strcmp(auxEBR.part_name,name)==0)&&(auxEBR.part_status == '1')){
+                    exists = 1;
+                    //break;
+                }
             }
         }
     }

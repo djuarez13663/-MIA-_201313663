@@ -241,6 +241,8 @@ int getInitPartition(MBR disco,int _size){
     int _max = 0;
     int asigno = 0;
 
+    _size--;
+
     if(disco.partition_table[0].part_start != (sizeof(MBR)+1)){
         refe = sizeof(MBR)+1;
         _max = disco.partition_table[0].part_start - 1;
@@ -261,7 +263,7 @@ int getInitPartition(MBR disco,int _size){
             if(disco.partition_table[cont+1].part_status != '0'){
                 _max = disco.partition_table[cont+1].part_start - 1;
             }else{
-                _max = disco.tamano_mbr;
+                _max = disco.tamano_mbr - 1;
             }
             if((_max - refe) >= _size){
                 start = refe;
@@ -312,12 +314,11 @@ void Delete_Partition(FILE *arch,char* name,char* type_delete){
     fread(&disco,sizeof(MBR),1,arch);
 
     for(int a = 0; a < 4; a++){
-            if(strcmp(disco.partition_table[a].name,name)==0){
+            if((strcmp(disco.partition_table[a].name,name)==0)&&(disco.partition_table[a].part_status == '1')){
                 disco.partition_table[a].part_status = '0';
-
                 if(strcasecmp(type_delete,"full")==0){
 
-                    for(int b = 0; b <= disco.partition_table[a].part_size; a++){
+                    for(int b = 0; b < disco.partition_table[a].part_size; b++){
                         int pos = b + disco.partition_table[a].part_start;
                         fseek(arch,pos,SEEK_SET);
                         fwrite("\0",sizeof(char),1,arch);
@@ -329,10 +330,40 @@ void Delete_Partition(FILE *arch,char* name,char* type_delete){
                     disco.partition_table[a].part_start = -1;
                     disco.partition_table[a].part_type = '\0';
                 }
+                break;
+            }
+            if((disco.partition_table[a].part_type == 'e')&&(disco.partition_table[a].part_status == '1')){
+                EBR auxEBR;
+                fseek(arch,disco.partition_table[a].part_start,SEEK_SET);
+                fread(&auxEBR,sizeof(EBR),1,arch);
+                if(auxEBR.part_next != -1){
+                    while(auxEBR.part_next != -1){
+                        int anterior = auxEBR.part_start;
+                        fseek(arch,auxEBR.part_next,SEEK_SET);
+                        fread(&auxEBR,sizeof(EBR),1,arch);
+                        int siguiente = auxEBR.part_next;
+                        if((strcmp(auxEBR.part_name,name)==0)&&(auxEBR.part_status == '1')){
+                            auxEBR.part_status = '0';
+                            if(strcasecmp(type_delete,"full")==0){
+                                for(int c = 0; c < auxEBR.part_size; c++){
+                                    int pos = c + auxEBR.part_start;
+                                    fseek(arch,pos,SEEK_SET);
+                                    fwrite("\0",sizeof(char),1,arch);
+                                }
+                            }
+                            fseek(arch,anterior,SEEK_SET);
+                            fread(&auxEBR,sizeof(EBR),1,arch);
+                            auxEBR.part_next = siguiente;
+                            fseek(arch,anterior,SEEK_SET);
+                            fwrite(&auxEBR,sizeof(EBR),1,arch);
+                            break;
+                        }
+                    }
+                }
             }
     }
     OrderPartitions(&disco);
-    fseek(arch,0L,SEEK_SET);
+    fseek(arch,0,SEEK_SET);
     fwrite(&disco,sizeof(MBR),1,arch);
 
 }
@@ -342,6 +373,7 @@ void getInitLogic(FILE *arch, int _size, EBR nuevaEBR){
     int asigno = 0;
     int refe = 0;
     int _max = 0;
+    _size--;
     MBR disco;
     fseek(arch,0,SEEK_SET);
     fread(&disco,sizeof(MBR),1,arch);
@@ -353,7 +385,7 @@ void getInitLogic(FILE *arch, int _size, EBR nuevaEBR){
             fread(&auxEBR,sizeof(EBR),1,arch);
             if(auxEBR.part_next == -1){
                 refe = disco.partition_table[a].part_start + sizeof(EBR);
-                _max = disco.partition_table[a].part_start + disco.partition_table[a].part_size;
+                _max = disco.partition_table[a].part_start + disco.partition_table[a].part_size -1;
                 if((_max - refe) >= _size){
                     start = refe;
                     asigno = 1;
@@ -390,7 +422,7 @@ void getInitLogic(FILE *arch, int _size, EBR nuevaEBR){
                 }
                 if(asigno == 0){
                     refe = auxEBR.part_start + auxEBR.part_size;
-                    _max = disco.partition_table[a].part_start + disco.partition_table[a].part_size;
+                    _max = disco.partition_table[a].part_start + disco.partition_table[a].part_size - 1;
                     if((_max - refe) >= _size){
                         start = refe;
                         auxEBR.part_next = start;
