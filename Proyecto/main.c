@@ -17,6 +17,8 @@ void BorrarDisco(char* com);
 void ManejarParticiones(char* com);
 void VerParticiones(FILE* disco);
 int ExistsPartition(FILE *disco,char* name);
+void Montar(char* com);
+void UMount(char* com);
 
 //***************************************
 
@@ -69,6 +71,10 @@ void IngresarCom(){
         BorrarDisco(comFinal);
     }else if(strstr(comAux,"fdisk")!=NULL){
         ManejarParticiones(comFinal);
+    }else if(strstr(comAux,"umount")!=NULL){
+        UMount(comFinal);
+    }else if(strstr(comAux,"mount")!=NULL){
+        Montar(comFinal);
     }
 
 }
@@ -620,4 +626,128 @@ int ExistsPartition(FILE *disco,char* name){
 
     return exists;
 }
+
+void Montar(char* com){
+    // *************** VARIABLES *****************
+    char path[200];
+    char name[100];
+
+    // *************** AUXILIARES ****************
+    char auxPath[200];
+    char auxName[200];
+
+    //**************** BANDERAS ******************
+    int flagPath = 0;
+    int flagName = 0;
+    int error = 0;
+
+    // *************** SEPARA VALORES ************
+    char* parametro;
+    parametro = strtok(com," ::");
+    while(parametro != NULL){
+        if(strcasecmp(parametro,"-path")==0){
+            parametro = strtok(NULL," ::");
+            strcpy(auxPath,parametro);
+            for(int a = 0; a < 200; a++){
+                path[a] = '\0';
+            }
+
+            auxPath[0] = ' ';
+
+            while(strstr(auxPath,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxPath," ");
+                strcat(auxPath,parametro);
+
+            }
+            auxPath[0] = '\"';
+
+            int c = 0;
+            for(int b = 1; b < (strlen(auxPath)-1); b++){
+                path[c] = auxPath[b];
+                c++;
+            };
+
+            FILE *arch = fopen(path,"rb");
+            if(arch){
+                fclose(arch);
+            }else{
+                printf("ERROR: El Disco Seleccionado No Existe.\n");
+                error = 1;
+                break;
+            }
+            flagPath = 1;
+        }else if(strcasecmp(parametro,"-name")==0){
+            parametro = strtok(NULL," ::");
+            strcpy(auxName,parametro);
+            for(int a = 0; a < 50; a++){
+                name[a] = '\0';
+            }
+
+            auxName[0] = ' ';
+
+            while(strstr(auxName,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxName," ");
+                strcat(auxName,parametro);
+
+            }
+            auxName[0] = '\"';
+
+            int c = 0;
+            for(int b = 1; b < (strlen(auxName)-1); b++){
+                name[c] = auxName[b];
+                c++;
+            }
+            flagName = 1;
+        }else if(strcasecmp(parametro,"mount")==0){
+
+        }else{
+            printf("ERROR: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
+            error = 1;
+            break;
+        }
+
+        parametro = strtok(NULL, " ::");
+    }
+
+    if(error == 0){
+        if((flagPath == 1)&&(flagName == 1)){
+            FILE *arch = fopen(path,"rb+");
+            if(ExistsPartition(arch,name)==1){
+                MountDisk(path,name);
+            }else{
+                printf("ERROR: La Particion A Montar No Existe.\n");
+            }
+        }else if((flagPath == 0)&&(flagName == 0)){
+            ViewMounted();
+        }else{
+            printf("ERROR: Faltan Parametros Obligatorios Para Montar Una Particion.\n");
+        }
+    }
+
+}
+
+void UMount(char* com){
+    char* parametro;
+    parametro = strtok(com," ::");
+    while(parametro != NULL){
+        if(strstr(parametro,"-id")!=NULL){
+            parametro = strtok(NULL," ::");
+            //printf("%s\n",parametro);
+            uMountDisk(parametro);
+        }else if(strcasecmp(parametro,"umount")==0){
+
+        }
+
+        parametro = strtok(NULL," ::");
+    }
+}
+
+
+
+
+
 

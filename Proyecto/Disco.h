@@ -26,6 +26,18 @@ typedef struct ebr{
     char part_name[16];
 }EBR;
 
+typedef struct MountPart{
+    char name[100];
+}MOUNTPART;
+
+typedef struct Discos{
+    char path[150];
+    MOUNTPART MPART[20];
+}DISCOS;
+
+
+DISCOS mounted[26];
+
 void CreateMBR(FILE *arch,int size);
 void CreateParticion(FILE *arch,int _size,char fit, char* name,char tipo);
 int getCountPartition(MBR disco);
@@ -37,6 +49,9 @@ void Delete_Partition(FILE *disco,char* name,char* type_delete);
 void getInitLogic(FILE *arch, int _size, EBR nuevaEBR);
 void ModifySize(FILE *arch,char* name,int newSize);
 char getTypePart(FILE *arch, char* name);
+void MountDisk(char* path, char* name);
+void ViewMounted();
+void uMountDisk(char* id);
 
 void CreateMBR(FILE *arch,int size){
     MBR nuevo;
@@ -624,4 +639,95 @@ char getTypePart(FILE *arch, char* name){
 
     return exists;
 }
+
+void MountDisk(char* path,char* name){
+    int disco = 0;
+    int existeDisco = 0;
+    int existePart = 0;
+    // VER SI YA EXISTE ESE DISCO EN EL VECTOR DE PARTICIONES MONTADAS
+    for(int a = 0; a < 26; a++){
+        if(strcmp(path,mounted[a].path)==0){
+            disco = a;
+            existeDisco = 1;
+            break;
+        }
+    }
+    // SI NO EXISTE SE CREA
+    if(existeDisco == 0){
+        for(int b = 0; b < 26; b++){
+            if(strcmp(mounted[b].path,"")==0){
+                strcpy(mounted[b].path,path);
+                disco = b;
+                break;
+            }
+        }
+    }
+    // VEMOS SI LA PARTICION YA FUE MONTADA
+    for(int c = 0; c < 20; c++){
+        if(strcmp(mounted[disco].MPART[c].name,name)==0){
+            existePart = 1;
+            break;
+        }
+    }
+    if(existePart == 0){
+        for(int d = 0; d < 20; d++){
+            if(strcmp(mounted[disco].MPART[d].name,"")==0){
+                strcpy(mounted[disco].MPART[d].name,name);
+                break;
+            }
+        }
+    }else{
+        printf("ERROR: La Particion Seleccionada Ya Esta Montada En El Sistema.\n");
+    }
+}
+
+void ViewMounted(){
+    printf("******************MOUNTED**********************\n");
+    for(int a = 0; a < 26; a++){
+        for(int b = 0; b < 20; b++){
+            if(strcmp(mounted[a].MPART[b].name,"")!=0){
+                char dev = (a + 97);
+                printf("id::vd%c%d -path::\"%s\" -name::\"%s\"\n",dev,(b+1),mounted[a].path,mounted[a].MPART[b].name);
+            }
+        }
+    }
+    printf("**********************************************\n");
+}
+
+void uMountDisk(char* id){
+    if((id[0] == 'v')&&(id[1] == 'd')){
+        int disco = id[2] - 97;
+        char aux[5];
+        int b = 0;
+        for(int a = 3; a < strlen(id); a++){
+            aux[b] = id[a];
+            b++;
+        }
+        //printf("%s\n",aux);
+        int part = atoi(aux);
+        part--;
+        if(strcmp(mounted[disco].MPART[part].name,"")==0){
+            printf("ERROR: La Particion \"%s\" No Ha Sido Montada.\n",id);
+        }else{
+            strcpy(mounted[disco].MPART[part].name,"");
+        }
+        for(int a = 0; a < 26; a++){
+            int cont = 0;
+            for(int b = 0; b < 20; b++){
+                if(strcmp(mounted[a].MPART[b].name,"")!=0){
+                    cont++;
+                }
+            }
+            if(cont == 0){
+                strcpy(mounted[a].path,"");
+            }
+        }
+    }else{
+        printf("ERROR: ID Invalido.\n");
+    }
+}
+
+
+
+
 
