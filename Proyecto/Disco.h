@@ -35,6 +35,8 @@ void OrderPartitions(MBR *disco);
 int ExistExtended(MBR disco);
 void Delete_Partition(FILE *disco,char* name,char* type_delete);
 void getInitLogic(FILE *arch, int _size, EBR nuevaEBR);
+void ModifySize(FILE *arch,char* name,int newSize);
+char getTypePart(FILE *arch, char* name);
 
 void CreateMBR(FILE *arch,int size){
     MBR nuevo;
@@ -425,6 +427,7 @@ void getInitLogic(FILE *arch, int _size, EBR nuevaEBR){
                     _max = disco.partition_table[a].part_start + disco.partition_table[a].part_size - 1;
                     if((_max - refe) >= _size){
                         start = refe;
+                        asigno = 1;
                         auxEBR.part_next = start;
                         fseek(arch,auxEBR.part_start,SEEK_SET);
                         fwrite(&auxEBR,sizeof(EBR),1,arch);
@@ -438,5 +441,187 @@ void getInitLogic(FILE *arch, int _size, EBR nuevaEBR){
         }
     }
 
+    if(asigno == 0){
+        printf("ERROR: No Hay Espacio Suficiente Para Esa Particion.\n");
+    }
     //return start;
 }
+
+void ModifySize(FILE *arch, char* name, int newSize){
+    char type = getTypePart(arch, name);
+    MBR disco;
+    fseek(arch,0,SEEK_SET);
+    fread(&disco,sizeof(MBR),1,arch);
+    int inicio = 0;
+    int fin = 0;
+    newSize--;
+    if(type == 'p'){
+        for(int a = 0; a < 4; a++){
+            if((strcmp(disco.partition_table[a].name,name)==0)&&(disco.partition_table[a].part_status == '1')){
+                inicio = disco.partition_table[a].part_start + disco.partition_table[a].part_size;
+                if(newSize > 0){
+                    if((a == 3) || (disco.partition_table[a+1].part_status == '0')){
+                        fin = disco.tamano_mbr - 1;
+                    }else{
+                        fin = disco.partition_table[a+1].part_start - 1;
+                    }
+                    if((fin - inicio) >= newSize){
+                        disco.partition_table[a].part_size += (newSize + 1);
+                        fseek(arch,0,SEEK_SET);
+                        fwrite(&disco,sizeof(MBR),1,arch);
+                        break;
+                    }else{
+                        printf("ERROR: No Hay Espacio Suficiente En El Disco Para Agregar Esa Cantidad A Esa Particion.\n");
+                        break;
+                    }
+                }else if(newSize < 0){
+                    // ACA CAMBIAR EL 100 PARA VALIDAR TAMANO MINIMO DE PARTICION
+                    if((disco.partition_table[a].part_size + newSize + 1) >= 100){
+                        disco.partition_table[a].part_size += (newSize + 1);
+                        fseek(arch,0,SEEK_SET);
+                        fwrite(&disco,sizeof(MBR),1,arch);
+                        break;
+                    }else{
+                        printf("ERROR: Espacio Minimo De Particion Es De 2Mb\n");
+                        break;
+                    }
+                }
+            }
+        }
+    }else if(type == 'e'){
+        for(int a = 0; a < 4; a++){
+            if((strcmp(disco.partition_table[a].name,name)==0)&&(disco.partition_table[a].part_status == '1')){
+                inicio = disco.partition_table[a].part_start + disco.partition_table[a].part_size;
+                if(newSize > 0){
+                    if((a == 3) || (disco.partition_table[a+1].part_status == '0')){
+                        fin = disco.tamano_mbr - 1;
+                    }else{
+                        fin = disco.partition_table[a+1].part_start - 1;
+                    }
+                    if((fin - inicio) >= newSize){
+                        disco.partition_table[a].part_size += (newSize + 1);
+                        fseek(arch,0,SEEK_SET);
+                        fwrite(&disco,sizeof(MBR),1,arch);
+                        break;
+                    }else{
+                        printf("ERROR: No Hay Espacio Suficiente En El Disco Para Agregar Esa Cantidad A Esa Particion.\n");
+                        break;
+                    }
+                }else if(newSize < 0){
+                    //int lastLogic = 0;
+                    // ACA CAMBIAR EL 100 PARA VALIDAR TAMANO MINIMO DE PARTICION
+                    if((disco.partition_table[a].part_size + newSize + 1) >= 100){
+                        EBR auxEBR;
+                        fseek(arch,disco.partition_table[a].part_start,SEEK_SET);
+                        fread(&auxEBR,sizeof(EBR),1,arch);
+                        if(auxEBR.part_next != -1){
+                            while(auxEBR.part_next != -1){
+                                fin = auxEBR.part_start + auxEBR.part_size;
+                                fseek(arch,auxEBR.part_next,SEEK_SET);
+                                fread(&auxEBR,sizeof(EBR),1,arch);
+                            }
+                            if((inicio - fin) >= (newSize * -1)){
+                                disco.partition_table[a].part_size += (newSize + 1);
+                                fseek(arch,0,SEEK_SET);
+                                fwrite(&disco,sizeof(MBR),1,arch);
+                                break;
+                            }else{
+                                printf("ERROR: No Hay Espacio Suficiente En El Disco Para Reducir Esa Cantidad A Esa Particion.\n");
+                            }
+                        }else{
+                            disco.partition_table[a].part_size += (newSize + 1);
+                            fseek(arch,0,SEEK_SET);
+                            fwrite(&disco,sizeof(MBR),1,arch);
+                            break;
+                        }
+                    }else{
+                        printf("ERROR: Espacio Minimo De Particion Es De 2Mb\n");
+                        break;
+                    }
+                }
+            }
+        }
+    }else if(type == 'l'){
+        for(int a = 0; a < 4; a++){
+            if((disco.partition_table[a].part_type == 'e')&&(disco.partition_table[a].part_status == '1')){
+                EBR auxEBR;
+                fseek(arch,disco.partition_table[a].part_start,SEEK_SET);
+                fread(&auxEBR,sizeof(EBR),1,arch);
+                while(auxEBR.part_next != -1){
+                    fseek(arch,auxEBR.part_next,SEEK_SET);
+                    fread(&auxEBR,sizeof(EBR),1,arch);
+                    if(strcmp(auxEBR.part_name,name)==0){
+                        inicio = auxEBR.part_start + auxEBR.part_size;
+                        if(newSize > 0){
+                            if(auxEBR.part_next == -1){
+                                fin = disco.partition_table[a].part_start + disco.partition_table[a].part_size - 1;
+                            }else{
+                                fin = auxEBR.part_next - 1;
+                            }
+                            if((fin - inicio) >= newSize){
+                                auxEBR.part_size += (newSize + 1);
+                                fseek(arch,auxEBR.part_start,SEEK_SET);
+                                fwrite(&auxEBR,sizeof(EBR),1,arch);
+                                break;
+                            }else{
+                                printf("ERROR: No Hay Espacio Suficiente En El Disco Para Agregar Esa Cantidad A Esa Particion.\n");
+                            }
+                        }else if(newSize < 0){
+                            // CAMBIAR EL 100 PARA VALIDAR TAMANO MINIMO DE PARTICIOIN
+                            if((auxEBR.part_size + newSize + 1) >= 100){
+                                auxEBR.part_size += (newSize + 1);
+                                fseek(arch,auxEBR.part_start,SEEK_SET);
+                                fwrite(&auxEBR,sizeof(EBR),1,arch);
+                                break;
+                            }else{
+                                printf("ERROR: Espacio Minimo De Particion Es De 2Mb\n");
+                            }
+                        }
+                    }
+
+                }
+
+            }
+        }
+    }
+}
+
+char getTypePart(FILE *arch, char* name){
+    MBR auxPart;
+    fseek(arch,0,SEEK_SET);
+    fread(&auxPart,sizeof(MBR),1,arch);
+
+    char exists = '0';
+
+    for(int a = 0; a < 4; a++){
+        if((strcmp(auxPart.partition_table[a].name,name)==0)){
+            if(auxPart.partition_table[a].part_status == '1'){
+                exists = auxPart.partition_table[a].part_type;
+            }
+        }
+        if((auxPart.partition_table[a].part_type == 'e')&&(auxPart.partition_table[a].part_status == '1')){
+            EBR auxEBR;
+            fseek(arch,auxPart.partition_table[a].part_start,SEEK_SET);
+            fread(&auxEBR,sizeof(EBR),1,arch);
+            if(auxEBR.part_next != -1){
+                fseek(arch,auxEBR.part_next,SEEK_SET);
+                fread(&auxEBR,sizeof(EBR),1,arch);
+                while(auxEBR.part_next != -1){
+                    if((strcmp(auxEBR.part_name,name)==0)&&(auxEBR.part_status == '1')){
+                        exists = 'l';
+                        //break;
+                    }
+                    fseek(arch,auxEBR.part_next,SEEK_SET);
+                    fread(&auxEBR,sizeof(EBR),1,arch);
+                }
+                if((strcmp(auxEBR.part_name,name)==0)&&(auxEBR.part_status == '1')){
+                    exists = 'l';
+                    //break;
+                }
+            }
+        }
+    }
+
+    return exists;
+}
+

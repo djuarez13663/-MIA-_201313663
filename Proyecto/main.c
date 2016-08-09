@@ -328,6 +328,7 @@ void ManejarParticiones(char* com){
     char fit = 'w';
     char name[50];
     char elim[10];
+    int add = 0;
 
     // *********** BANDERAS ************
     int flagsize = 0;
@@ -385,7 +386,7 @@ void ManejarParticiones(char* com){
             for(int b = 1; b < (strlen(auxPath)-1); b++){
                 path[c] = auxPath[b];
                 c++;
-            }
+            };
 
             FILE *arch = fopen(path,"rb");
             if(arch){
@@ -449,6 +450,9 @@ void ManejarParticiones(char* com){
             flagname = 1;
         }else if(strcasecmp(parametro,"+add")==0){
             parametro = strtok(NULL," ::");
+            add = atoi(parametro);
+            flagadd = 1;
+
         }else if(strcasecmp(parametro,"fdisk")==0){
 
         }else{
@@ -494,6 +498,24 @@ void ManejarParticiones(char* com){
             }
         }else if((flagadd == 1)&&(flagdelete == 0)){
             // *********** SE MODIFICA PARTICION *********
+            if(flagname == 1 && flagpath == 1){
+                FILE *arch = fopen(path,"rb+");
+                if(ExistsPartition(arch,name)==1){
+                    if(unit == 'k'){
+                    add = add * 1024;
+                    }else if(unit == 'm'){
+                        add = add * 1024 * 1024;
+                    }
+                    //printf("ADD: %d\n",add);
+                    ModifySize(arch,name,add);
+                    VerParticiones(arch);
+                }else{
+                    printf("ERROR: La Particion A Modificar No Existe.\n");
+                }
+                fclose(arch);
+            }else{
+                printf("ERROR: Faltan Parametros Obligatorios Para Modificar Particion.\n");
+            }
         }else if((flagadd == 0)&&(flagdelete == 0)){
             // *********** SE CREA LA PARTICION **********
             if((flagname == 1)&&(flagpath == 1)&&(flagsize == 1)){
