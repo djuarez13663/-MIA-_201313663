@@ -52,6 +52,8 @@ char getTypePart(FILE *arch, char* name);
 void MountDisk(char* path, char* name);
 void ViewMounted();
 void uMountDisk(char* id);
+int IsMounted(char* id);
+void MBRReport(char* path, char* id);
 
 void CreateMBR(FILE *arch,int size){
     MBR nuevo;
@@ -727,7 +729,101 @@ void uMountDisk(char* id){
     }
 }
 
+int IsMounted(char* id){
+    int ismounted = 0;
 
+    if((id[0] == 'v')&&(id[1] == 'd')){
+        int disco = id[2] - 97;
+        char aux[5];
+        int b = 0;
+        for(int a = 3; a < strlen(id); a++){
+            aux[b] = id[a];
+            b++;
+        }
+        //printf("%s\n",aux);
+        int part = atoi(aux);
+        part--;
+        if(strcmp(mounted[disco].MPART[part].name,"")==0){
+            printf("ERROR: La Particion \"%s\" No Ha Sido Montada.\n",id);
+            ismounted = 0;
+        }else{
+            ismounted = 1;
+        }
+    }else{
+        printf("ERROR: ID Invalido.\n");
+        ismounted = 0;
+    }
 
+    return ismounted;
+}
+
+void MBRReport(char* path, char* id){
+    FILE *rep = fopen("Reporte.dot","w");
+
+    fprintf(rep,"digraph g{\n");
+    fprintf(rep,"node[shape = box];\n");
+    //*********** OBTENEMOS DIRECCION DE DISCO ******
+    char auxPath[200];
+    int disco = id[2] - 97;
+    strcpy(auxPath,mounted[disco].path);
+    //***********************************************
+    //*********** OBTENEMOS MBR *********************
+    FILE *arch = fopen(mounted[disco].path,"rb+");
+    MBR auxMBR;
+    fseek(arch,0,SEEK_SET);
+    fread(&auxMBR,sizeof(MBR),1,arch);
+    //***********************************************
+    //*********** OBTENEMOS NOMBRE DISCO ************
+
+    char nameDisk[50];
+    char* split = strtok(auxPath,"/");
+    while(split != NULL){
+        strcpy(nameDisk,split);
+        split = strtok(NULL,"/");
+    }
+    strcpy(auxPath,mounted[disco].path);
+    //***********************************************
+
+    fprintf(rep,"label = \"Reporte MBR %s\";\n",nameDisk);
+    fprintf(rep,"labelloc = \"t\";\n");
+
+    // *********** TABLA DE MBR ********************
+    fprintf(rep,"\"Record\" [label = <<table border = \"1\" cellspacing = \"0\">\n");
+    fprintf(rep,"<tr><td colspan = \"2\"><b>MBR %s</b></td></tr>\n",nameDisk);
+    fprintf(rep,"<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>\n");
+    fprintf(rep,"<tr><td>mbr_size</td><td>%d</td></tr>\n",auxMBR.tamano_mbr);
+    fprintf(rep,"<tr><td>mbr_fecha_creacion</td><td>%s</td></tr>\n",auxMBR.fecha_creacion_mbr);
+    fprintf(rep,"<tr><td>mbr_disk_signature</td><td>%d</td></tr>\n",auxMBR.disk_signature_mbr);
+    //
+    for(int a = 0; a < 4; a++){
+        if(auxMBR.partition_table[a].part_status == '1'){
+            fprintf(rep,"<tr><td>part_status_%d</td><td>%c</td></tr>\n",(a+1),auxMBR.partition_table[a].part_status);
+            fprintf(rep,"<tr><td>part_type_%d</td><td><b>%c</b></td></tr>\n",(a+1),(toupper(auxMBR.partition_table[a].part_type)));
+            fprintf(rep,"<tr><td>part_fit_%d</td><td><b>%c</b></td></tr>\n",(a+1),(toupper(auxMBR.partition_table[a].part_fit)));
+            fprintf(rep,"<tr><td>part_start_%d</td><td>%d</td></tr>\n",(a+1),auxMBR.partition_table[a].part_start);
+            fprintf(rep,"<tr><td>part_size_%d</td><td>%d</td></tr>\n",(a+1),auxMBR.partition_table[a].part_size);
+            fprintf(rep,"<tr><td>part_name_%d</td><td>%s</td></tr>\n",(a+1),auxMBR.partition_table[a].name);
+        }
+    }
+
+    fprintf(rep,"</table>>];\n");
+    // *********************************************
+
+    fprintf(rep,"}");
+    fflush(rep);
+    fclose(rep);
+    fclose(arch);
+    // ************* GENERAR LA GRAFICA Y ABRIRLA ********************
+    char comando[500];
+    strcpy(comando,"");
+    strcat(comando,"dot -Tpng Reporte.dot -o ");
+    strcat(comando, path);
+    system(comando);
+    strcpy(comando,"");
+    strcat(comando,"xviewer \"");
+    strcat(comando,path);
+    strcat(comando,"\"");
+    system(comando);
+}
 
 

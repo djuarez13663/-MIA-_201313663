@@ -8,7 +8,7 @@
 #include "Disco.h"
 
 //************* VARIABLES ***************
-
+char *NombreReportes[2] = {"mbr","disk"};
 //************* METODOS *****************
 
 void IngresarCom();
@@ -19,6 +19,7 @@ void VerParticiones(FILE* disco);
 int ExistsPartition(FILE *disco,char* name);
 void Montar(char* com);
 void UMount(char* com);
+void Reports(char* com);
 
 //***************************************
 
@@ -75,6 +76,8 @@ void IngresarCom(){
         UMount(comFinal);
     }else if(strstr(comAux,"mount")!=NULL){
         Montar(comFinal);
+    }else if(strstr(comAux,"rep")!=NULL){
+        Reports(comFinal);
     }
 
 }
@@ -746,7 +749,137 @@ void UMount(char* com){
     }
 }
 
+void Reports(char* com){
+    // **************** VARIABLES ************
+    char path[200];
+    char name[50];
+    char id[50];
+    // **************** AUXILIARES ***********
+    char auxPath[200];
+    char auxId[50];
+    // **************** BANDERAS *************
+    int flagPath = 0;
+    int flagName = 0;
+    int flagId = 0;
+    int error = 0;
+    // ************* SEPARAMOS VALORES *******
+    char* parametro;
+    parametro = strtok(com," ::");
+    while(parametro != NULL){
+        if(strcasecmp(parametro,"-name")==0){
+            int nombreValido = 0;
+            parametro = strtok(NULL," ::");
+            strcpy(name,parametro);
+            for(int a = 0; a < 2; a++){
+                if(strcasecmp(name,NombreReportes[a])==0){
+                    nombreValido = 1;
+                }
+            }
+            if(nombreValido == 0){
+                error = 1;
+                printf("ERROR: \"%s\" No Es Un Nombre De Reporte Valido.\n",name);
+                break;
+            }
+            flagName = 1;
+        }else if(strcasecmp(parametro,"-path")==0){
+            parametro = strtok(NULL," ::");
+            strcpy(auxPath,parametro);
+            for(int a = 0; a < 200; a++){
+                path[a] = '\0';
+            }
 
+            auxPath[0] = ' ';
+
+            while(strstr(auxPath,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxPath," ");
+                strcat(auxPath,parametro);
+
+            }
+            auxPath[0] = '\"';
+
+            int c = 0;
+            for(int b = 1; b < (strlen(auxPath)-1); b++){
+                path[c] = auxPath[b];
+                c++;
+            };
+
+            /*char PathDir[200];
+            strcpy(PathDir,"");
+            //strcat(PathDir,"\"");
+            char* dir = strtok(auxPath,"/");
+
+            while(dir != NULL){
+                if(strstr(dir,".png")==NULL){
+                    strcat(PathDir,dir);
+                    strcat(PathDir,"/");
+                }
+
+                dir = strtok(NULL,"/");
+            }
+            PathDir[strlen(PathDir)-1] = '\"';
+            //printf("PATHHHHHHHHHHH: %s\n",PathDir);
+            char mkdirCommand[300];
+            strcpy(mkdirCommand,"");
+            strcat(mkdirCommand,"mkdir -p ");
+            strcat(mkdirCommand,PathDir);
+            system(mkdirCommand);
+            */
+            flagPath = 1;
+        }else if(strcasecmp(parametro,"-id")==0){
+            parametro = strtok(NULL," ::");
+            strcpy(id,parametro);
+            if(IsMounted(id)==0){
+                error = 1;
+                break;
+            }
+            flagId = 1;
+        }else if(strcasecmp(parametro,"rep")==0){
+
+        }else{
+            printf("ERROR: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
+            error = 1;
+            break;
+        }
+
+        parametro = strtok(NULL," ::");
+    }
+    if(error == 0){
+        //********** CREAR DIRECTORIO *******
+        char PathDir[200];
+        strcpy(PathDir,"");
+
+        char* dir = strtok(auxPath,"/");
+
+        while(dir != NULL){
+            if(strstr(dir,".png")==NULL){
+                strcat(PathDir,dir);
+                strcat(PathDir,"/");
+            }
+
+            dir = strtok(NULL,"/");
+        }
+        PathDir[strlen(PathDir)-1] = '\"';
+
+        char mkdirCommand[300];
+        strcpy(mkdirCommand,"");
+        strcat(mkdirCommand,"mkdir -p ");
+        strcat(mkdirCommand,PathDir);
+        system(mkdirCommand);
+        // ******************************************
+        if(flagId == 1 && flagName == 1 && flagPath == 1){
+            if(strcasecmp(name,"mbr")==0){
+
+                MBRReport(path,id);
+            }else if(strcasecmp(id,"disk")==0){
+
+            }
+        }else{
+            printf("ERROR: Falta Parametros Obligatorios Para Realizar El Reporte.\n");
+        }
+    }
+}
 
 
 
