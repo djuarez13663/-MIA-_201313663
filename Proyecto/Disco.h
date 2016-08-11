@@ -54,6 +54,7 @@ void ViewMounted();
 void uMountDisk(char* id);
 int IsMounted(char* id);
 void MBRReport(char* path, char* id);
+void DiskReport(char* path, char* id);
 
 void CreateMBR(FILE *arch,int size){
     MBR nuevo;
@@ -791,22 +792,50 @@ void MBRReport(char* path, char* id){
     fprintf(rep,"\"Record\" [label = <<table border = \"1\" cellspacing = \"0\">\n");
     fprintf(rep,"<tr><td colspan = \"2\"><b>MBR %s</b></td></tr>\n",nameDisk);
     fprintf(rep,"<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>\n");
-    fprintf(rep,"<tr><td>mbr_size</td><td>%d</td></tr>\n",auxMBR.tamano_mbr);
-    fprintf(rep,"<tr><td>mbr_fecha_creacion</td><td>%s</td></tr>\n",auxMBR.fecha_creacion_mbr);
-    fprintf(rep,"<tr><td>mbr_disk_signature</td><td>%d</td></tr>\n",auxMBR.disk_signature_mbr);
+    fprintf(rep,"<tr><td><b>mbr_size</b></td><td>%d</td></tr>\n",auxMBR.tamano_mbr);
+    fprintf(rep,"<tr><td><b>mbr_fecha_creacion</b></td><td>%s</td></tr>\n",auxMBR.fecha_creacion_mbr);
+    fprintf(rep,"<tr><td><b>mbr_disk_signature</b></td><td>%d</td></tr>\n",auxMBR.disk_signature_mbr);
     //
     for(int a = 0; a < 4; a++){
         if(auxMBR.partition_table[a].part_status == '1'){
-            fprintf(rep,"<tr><td>part_status_%d</td><td>%c</td></tr>\n",(a+1),auxMBR.partition_table[a].part_status);
-            fprintf(rep,"<tr><td>part_type_%d</td><td><b>%c</b></td></tr>\n",(a+1),(toupper(auxMBR.partition_table[a].part_type)));
-            fprintf(rep,"<tr><td>part_fit_%d</td><td><b>%c</b></td></tr>\n",(a+1),(toupper(auxMBR.partition_table[a].part_fit)));
-            fprintf(rep,"<tr><td>part_start_%d</td><td>%d</td></tr>\n",(a+1),auxMBR.partition_table[a].part_start);
-            fprintf(rep,"<tr><td>part_size_%d</td><td>%d</td></tr>\n",(a+1),auxMBR.partition_table[a].part_size);
-            fprintf(rep,"<tr><td>part_name_%d</td><td>%s</td></tr>\n",(a+1),auxMBR.partition_table[a].name);
+            fprintf(rep,"<tr><td><b>part_status_%d</b></td><td>%c</td></tr>\n",(a+1),auxMBR.partition_table[a].part_status);
+            fprintf(rep,"<tr><td><b>part_type_%d</b></td><td><b>%c</b></td></tr>\n",(a+1),(toupper(auxMBR.partition_table[a].part_type)));
+            fprintf(rep,"<tr><td><b>part_fit_%d</b></td><td><b>%c</b></td></tr>\n",(a+1),(toupper(auxMBR.partition_table[a].part_fit)));
+            fprintf(rep,"<tr><td><b>part_start_%d</b></td><td>%d</td></tr>\n",(a+1),auxMBR.partition_table[a].part_start);
+            fprintf(rep,"<tr><td><b>part_size_%d</b></td><td>%d</td></tr>\n",(a+1),auxMBR.partition_table[a].part_size);
+            fprintf(rep,"<tr><td><b>part_name_%d</b></td><td>%s</td></tr>\n",(a+1),auxMBR.partition_table[a].name);
         }
     }
 
     fprintf(rep,"</table>>];\n");
+    // *********************************************
+
+    // ************ TABLAS DE EBR ******************
+    int cont = 1;
+    EBR auxEBR;
+    for(int b = 0; b < 4; b++){
+        if(auxMBR.partition_table[b].part_type == 'e' && auxMBR.partition_table[b].part_status == '1'){
+            fseek(arch,auxMBR.partition_table[b].part_start,SEEK_SET);
+            fread(&auxEBR,sizeof(EBR),1,arch);
+            while(auxEBR.part_next != -1){
+                fseek(arch,auxEBR.part_next,SEEK_SET);
+                fread(&auxEBR,sizeof(EBR),1,arch);
+                fprintf(rep,"\"Record%d\" [label = <<table border = \"1\" cellspacing = \"0\">\n",cont);
+
+                fprintf(rep,"<tr><td colspan = \"2\"><b>EBR_%d</b></td></tr>\n",cont);
+                fprintf(rep,"<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>\n");
+                fprintf(rep,"<tr><td><b>part_status_%d</b></td><td>%c</td></tr>\n",cont,auxEBR.part_status);
+                fprintf(rep,"<tr><td><b>part_fit_%d</b></td><td><b>%c</b></td></tr>\n",cont,toupper(auxEBR.part_fit));
+                fprintf(rep,"<tr><td><b>part_start_%d</b></td><td>%d</td></tr>\n",cont,auxEBR.part_start);
+                fprintf(rep,"<tr><td><b>part_size_%d</b></td><td>%d</td></tr>\n",cont,auxEBR.part_size);
+                fprintf(rep,"<tr><td><b>part_next_%d</b></td><td>%d</td></tr>\n",cont,auxEBR.part_next);
+                fprintf(rep,"<tr><td><b>part_name_%d</b></td><td>%s</td></tr>\n",cont,auxEBR.part_name);
+
+                fprintf(rep,"</table>>];\n");
+                cont++;
+            }
+        }
+    }
     // *********************************************
 
     fprintf(rep,"}");
@@ -820,10 +849,124 @@ void MBRReport(char* path, char* id){
     strcat(comando, path);
     system(comando);
     strcpy(comando,"");
-    strcat(comando,"xviewer \"");
+    strcat(comando,"viewnior \"");
     strcat(comando,path);
-    strcat(comando,"\"");
+    strcat(comando,"\"&");
     system(comando);
 }
 
+void DiskReport(char* path, char* id){
+    //*********** OBTENEMOS DIRECCION DE DISCO ******
+    char auxPath[200];
+    int disco = id[2] - 97;
+    strcpy(auxPath,mounted[disco].path);
+    //printf("%s\n",auxPath);
+    //***********************************************
+    // *********** OBTENEMOS MBR ****************
+    FILE *arch = fopen(mounted[disco].path,"rb+");
+    MBR auxMBR;
+    fseek(arch,0,SEEK_SET);
+    fread(&auxMBR,sizeof(MBR),1,arch);
+    // ******************************************
+    //*********** OBTENEMOS NOMBRE DISCO ************
 
+    char nameDisk[50];
+    char* split = strtok(auxPath,"/");
+    while(split != NULL){
+        strcpy(nameDisk,split);
+        split = strtok(NULL,"/");
+    }
+    strcpy(auxPath,mounted[disco].path);
+    //***********************************************
+    // *********** ARCHIVO DE REPORTE ***************
+    FILE *rep = fopen("Reporte.dot","w");
+
+    fprintf(rep,"digraph g{\n");
+    fprintf(rep,"node[shape = record];\n");
+    fprintf(rep,"label = \"Reporte DISK %s\";\n",nameDisk);
+    fprintf(rep,"labelloc = \"t\";\n");
+    // ********** MBR ************
+    fprintf(rep,"struct [shape = record, label = \"MBR %s &#92;n mbr_size: %d &#92;n mbr_disk_signature: %d &#92;n mbr_fecha_creacion: %s",nameDisk,auxMBR.tamano_mbr,auxMBR.disk_signature_mbr,auxMBR.fecha_creacion_mbr);
+    // ********* PARTICIONES *****
+    for(int a = 0; a < 4; a++){
+        if(auxMBR.partition_table[a].part_status == '1'){
+            // VERIFICAR ESPACIO VACIO AL INICIO
+            if(a == 0){
+                if((sizeof(MBR)+1) != auxMBR.partition_table[a].part_start){
+                    fprintf(rep,"|Espacio Libre &#92;n %d bytes" ,(auxMBR.partition_table[a].part_start - sizeof(MBR) -1));
+                }
+            }else{
+                if((auxMBR.partition_table[a-1].part_start + auxMBR.partition_table[a-1].part_size) != auxMBR.partition_table[a].part_start){
+                    fprintf(rep,"|Espacio Libre &#92;n %d bytes",(auxMBR.partition_table[a].part_start - (auxMBR.partition_table[a-1].part_start + auxMBR.partition_table[a-1].part_size)));
+                }
+            }
+
+            // EXTENDIDA CON LOGICA
+            if(auxMBR.partition_table[a].part_type == 'e'){
+                int inicio = 0;
+                fprintf(rep,"|{part_name: %s &#92;n part_start: %d &#92;n part_size: %d &#92;n part_type: %c",auxMBR.partition_table[a].name,auxMBR.partition_table[a].part_start,auxMBR.partition_table[a].part_size,toupper(auxMBR.partition_table[a].part_type));
+                //LOGICAAAAAAAAAAAS
+                EBR auxEBR;
+                fseek(arch,auxMBR.partition_table[a].part_start,SEEK_SET);
+                fread(&auxEBR,sizeof(EBR),1,arch);
+                fprintf(rep,"|{");
+                if(auxEBR.part_next == -1){
+                    fprintf(rep,"Espacio Libre: &#92;n %d bytes",(auxMBR.partition_table[a].part_size - sizeof(EBR)));
+                }else{
+                    if(auxEBR.part_next != (auxMBR.partition_table[a].part_start + sizeof(EBR))){
+                        fprintf(rep,"Espacio Libre: &#92;n %d bytes",(auxEBR.part_next - (auxMBR.partition_table[a].part_start + sizeof(EBR))));
+                        inicio = 1;
+                    }
+                    while(auxEBR.part_next != -1){
+                        fseek(arch,auxEBR.part_next,SEEK_SET);
+                        fread(&auxEBR,sizeof(EBR),1,arch);
+                        if(inicio == 1){
+                            fprintf(rep,"|");
+                        }else{
+                            inicio = 1;
+                        }
+                        fprintf(rep,"part_name: %s &#92;n part_start: %d &#92;n part_size: %d &#92;n part_next: %d",auxEBR.part_name,auxEBR.part_start,auxEBR.part_size,auxEBR.part_next);
+                        if(auxEBR.part_next != -1){
+                            if(auxEBR.part_next != (auxEBR.part_start + auxEBR.part_size)){
+                                fprintf(rep,"|Espacio Libre: &#92;n %d bytes",(auxEBR.part_next - (auxEBR.part_start + auxEBR.part_size)));
+                            }
+                        }else{
+                            if((auxEBR.part_start + auxEBR.part_size) != (auxMBR.partition_table[a].part_start + auxMBR.partition_table[a].part_size)){
+                                fprintf(rep,"|Espacio Libre: &#92;n %d bytes",((auxMBR.partition_table[a].part_start + auxMBR.partition_table[a].part_size) - (auxEBR.part_start + auxEBR.part_size)));
+                            }
+                        }
+                    }
+                }
+
+                fprintf(rep,"}}");
+            }else{
+            // PRIMARIA
+                fprintf(rep,"|part_name: %s &#92;n part_start: %d &#92;n part_size: %d &#92;n part_type: %c",auxMBR.partition_table[a].name,auxMBR.partition_table[a].part_start,auxMBR.partition_table[a].part_size,toupper(auxMBR.partition_table[a].part_type));
+            }
+            if((a == 3)||(auxMBR.partition_table[a+1].part_status=='0')){
+                if((auxMBR.partition_table[a].part_start + auxMBR.partition_table[a].part_size) != auxMBR.tamano_mbr){
+                    fprintf(rep,"|Espacio Libre &#92;n %d bytes",(auxMBR.tamano_mbr - (auxMBR.partition_table[a].part_start + auxMBR.partition_table[a].part_size)));
+                    break;
+                }
+            }
+        }
+    }
+    // ***************************
+    fprintf(rep,"\"];");
+    fprintf(rep,"}");
+    fflush(rep);
+
+    fclose(rep);
+    fclose(arch);
+    // ************* GENERAR LA GRAFICA Y ABRIRLA ********************
+    char comando[500];
+    strcpy(comando,"");
+    strcat(comando,"dot -Tpng Reporte.dot -o ");
+    strcat(comando, path);
+    system(comando);
+    strcpy(comando,"");
+    strcat(comando,"viewnior \"");
+    strcat(comando,path);
+    strcat(comando,"\"&");
+    system(comando);
+}

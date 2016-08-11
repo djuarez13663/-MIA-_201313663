@@ -805,27 +805,6 @@ void Reports(char* com){
                 c++;
             };
 
-            /*char PathDir[200];
-            strcpy(PathDir,"");
-            //strcat(PathDir,"\"");
-            char* dir = strtok(auxPath,"/");
-
-            while(dir != NULL){
-                if(strstr(dir,".png")==NULL){
-                    strcat(PathDir,dir);
-                    strcat(PathDir,"/");
-                }
-
-                dir = strtok(NULL,"/");
-            }
-            PathDir[strlen(PathDir)-1] = '\"';
-            //printf("PATHHHHHHHHHHH: %s\n",PathDir);
-            char mkdirCommand[300];
-            strcpy(mkdirCommand,"");
-            strcat(mkdirCommand,"mkdir -p ");
-            strcat(mkdirCommand,PathDir);
-            system(mkdirCommand);
-            */
             flagPath = 1;
         }else if(strcasecmp(parametro,"-id")==0){
             parametro = strtok(NULL," ::");
@@ -870,10 +849,9 @@ void Reports(char* com){
         // ******************************************
         if(flagId == 1 && flagName == 1 && flagPath == 1){
             if(strcasecmp(name,"mbr")==0){
-
                 MBRReport(path,id);
-            }else if(strcasecmp(id,"disk")==0){
-
+            }else if(strcasecmp(name,"disk")==0){
+                DiskReport(path,id);
             }
         }else{
             printf("ERROR: Falta Parametros Obligatorios Para Realizar El Reporte.\n");

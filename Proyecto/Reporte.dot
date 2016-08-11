@@ -5,26 +5,46 @@ labelloc = "t";
 "Record" [label = <<table border = "1" cellspacing = "0">
 <tr><td colspan = "2"><b>MBR Disco 1.dsk</b></td></tr>
 <tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
-<tr><td>mbr_size</td><td>1024</td></tr>
-<tr><td>mbr_fecha_creacion</td><td>08/08/16 22:37:05</td></tr>
-<tr><td>mbr_disk_signature</td><td>375</td></tr>
-<tr><td>part_status_1</td><td>1</td></tr>
-<tr><td>part_type_1</td><td><b>P</b></td></tr>
-<tr><td>part_fit_1</td><td><b>B</b></td></tr>
-<tr><td>part_start_1</td><td>249</td></tr>
-<tr><td>part_size_1</td><td>100</td></tr>
-<tr><td>part_name_1</td><td>Particion 1.1</td></tr>
-<tr><td>part_status_2</td><td>1</td></tr>
-<tr><td>part_type_2</td><td><b>P</b></td></tr>
-<tr><td>part_fit_2</td><td><b>B</b></td></tr>
-<tr><td>part_start_2</td><td>349</td></tr>
-<tr><td>part_size_2</td><td>100</td></tr>
-<tr><td>part_name_2</td><td>Particion 1.2</td></tr>
-<tr><td>part_status_3</td><td>1</td></tr>
-<tr><td>part_type_3</td><td><b>P</b></td></tr>
-<tr><td>part_fit_3</td><td><b>B</b></td></tr>
-<tr><td>part_start_3</td><td>449</td></tr>
-<tr><td>part_size_3</td><td>100</td></tr>
-<tr><td>part_name_3</td><td>Particion 1.3</td></tr>
+<tr><td><b>mbr_size</b></td><td>2097152</td></tr>
+<tr><td><b>mbr_fecha_creacion</b></td><td>09/08/16 21:09:32</td></tr>
+<tr><td><b>mbr_disk_signature</b></td><td>720</td></tr>
+<tr><td><b>part_status_1</b></td><td>1</td></tr>
+<tr><td><b>part_type_1</b></td><td><b>P</b></td></tr>
+<tr><td><b>part_fit_1</b></td><td><b>B</b></td></tr>
+<tr><td><b>part_start_1</b></td><td>249</td></tr>
+<tr><td><b>part_size_1</b></td><td>350</td></tr>
+<tr><td><b>part_name_1</b></td><td>Particion 1</td></tr>
+<tr><td><b>part_status_2</b></td><td>1</td></tr>
+<tr><td><b>part_type_2</b></td><td><b>E</b></td></tr>
+<tr><td><b>part_fit_2</b></td><td><b>B</b></td></tr>
+<tr><td><b>part_start_2</b></td><td>649</td></tr>
+<tr><td><b>part_size_2</b></td><td>800</td></tr>
+<tr><td><b>part_name_2</b></td><td>Particion 2</td></tr>
+<tr><td><b>part_status_3</b></td><td>1</td></tr>
+<tr><td><b>part_type_3</b></td><td><b>P</b></td></tr>
+<tr><td><b>part_fit_3</b></td><td><b>B</b></td></tr>
+<tr><td><b>part_start_3</b></td><td>1449</td></tr>
+<tr><td><b>part_size_3</b></td><td>400</td></tr>
+<tr><td><b>part_name_3</b></td><td>Particion 3</td></tr>
+</table>>];
+"Record1" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_1</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_1</b></td><td>1</td></tr>
+<tr><td><b>part_fit_1</b></td><td><b>B</b></td></tr>
+<tr><td><b>part_start_1</b></td><td>881</td></tr>
+<tr><td><b>part_size_1</b></td><td>150</td></tr>
+<tr><td><b>part_next_1</b></td><td>1081</td></tr>
+<tr><td><b>part_name_1</b></td><td>Particion L2</td></tr>
+</table>>];
+"Record2" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_2</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_2</b></td><td>1</td></tr>
+<tr><td><b>part_fit_2</b></td><td><b>B</b></td></tr>
+<tr><td><b>part_start_2</b></td><td>1081</td></tr>
+<tr><td><b>part_size_2</b></td><td>200</td></tr>
+<tr><td><b>part_next_2</b></td><td>-1</td></tr>
+<tr><td><b>part_name_2</b></td><td>Particion L3</td></tr>
 </table>>];
 }

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="main.c" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
+	<File name="Disco.h" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="24487" topLine="767" />
+			<Cursor1 position="38522" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="Disco.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
+	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="29176" topLine="771" />
+			<Cursor1 position="25556" topLine="825" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>
