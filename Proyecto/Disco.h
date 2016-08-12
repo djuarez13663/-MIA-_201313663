@@ -494,7 +494,7 @@ void ModifySize(FILE *arch, char* name, int newSize){
                     }
                 }else if(newSize < 0){
                     // ACA CAMBIAR EL 100 PARA VALIDAR TAMANO MINIMO DE PARTICION
-                    if((disco.partition_table[a].part_size + newSize + 1) >= 100){
+                    if((disco.partition_table[a].part_size + newSize + 1) >= (2*1024*1024)){
                         disco.partition_table[a].part_size += (newSize + 1);
                         fseek(arch,0,SEEK_SET);
                         fwrite(&disco,sizeof(MBR),1,arch);
@@ -528,7 +528,7 @@ void ModifySize(FILE *arch, char* name, int newSize){
                 }else if(newSize < 0){
                     //int lastLogic = 0;
                     // ACA CAMBIAR EL 100 PARA VALIDAR TAMANO MINIMO DE PARTICION
-                    if((disco.partition_table[a].part_size + newSize + 1) >= 100){
+                    if((disco.partition_table[a].part_size + newSize + 1) >= (2*1024*1024)){
                         EBR auxEBR;
                         fseek(arch,disco.partition_table[a].part_start,SEEK_SET);
                         fread(&auxEBR,sizeof(EBR),1,arch);
@@ -586,7 +586,7 @@ void ModifySize(FILE *arch, char* name, int newSize){
                             }
                         }else if(newSize < 0){
                             // CAMBIAR EL 100 PARA VALIDAR TAMANO MINIMO DE PARTICIOIN
-                            if((auxEBR.part_size + newSize + 1) >= 100){
+                            if((auxEBR.part_size + newSize + 1) >= (2*1024*1024)){
                                 auxEBR.part_size += (newSize + 1);
                                 fseek(arch,auxEBR.part_start,SEEK_SET);
                                 fwrite(&auxEBR,sizeof(EBR),1,arch);

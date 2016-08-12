@@ -20,6 +20,8 @@ int ExistsPartition(FILE *disco,char* name);
 void Montar(char* com);
 void UMount(char* com);
 void Reports(char* com);
+void LeerArchivo(char* com);
+void EjecutarArchivo(char* path);
 
 //***************************************
 
@@ -78,6 +80,8 @@ void IngresarCom(){
         Montar(comFinal);
     }else if(strstr(comAux,"rep")!=NULL){
         Reports(comFinal);
+    }else if(strstr(comAux,"exec")!=NULL){
+        LeerArchivo(comFinal);
     }
 
 }
@@ -102,7 +106,7 @@ void CrearDisco(char* com){
             parametro = strtok(NULL," ::");
             size = atoi(parametro);
             if(size < 1){
-                printf("ERROR: El tamaño del archivo debe ser mayor a 0\n");
+                printf("ERROR: El tamaño del disco debe ser mayor a 2Mb\n");
                 error = 1;
                 break;
             }
@@ -214,7 +218,7 @@ void CrearDisco(char* com){
                 fclose(arch);
                 printf("ERROR: Disco ya Existe\n");
             }else{
-                FILE *arch1 = fopen(path,"wb");
+
 
                 int tam = 0;
 
@@ -223,24 +227,22 @@ void CrearDisco(char* com){
                 }else{
                     tam = size * 1024 * 1024;
                 }
-
-                for(int a = 0; a < tam; a++){
-                    fseek(arch1,a,SEEK_SET);
-                    fwrite("\0",sizeof(char),1,arch1);
+                if(tam >= (10*1024*1024)){
+                    FILE *arch1 = fopen(path,"wb");
+                    fseek(arch1,0,SEEK_SET);
+                    for(int a = 0; a < tam; a++){
+                        //fseek(arch1,a,SEEK_SET);
+                        fwrite("\0",sizeof(char),1,arch1);
+                    }
+                    CreateMBR(arch1,tam);
+                    printf("Disco \"%s\" Creado\n",name);
+                    fclose(arch1);
+                }else{
+                    printf("ERROR: El Tamaño Del Disco Debe Ser Mayor a 10 Mb\n");
                 }
 
 
-                CreateMBR(arch1,tam);
-                //printf("disco.disk_signature_mbr = %d\n",nuevo.disk_signature_mbr);
-                //printf("disco.fecha_creacion_mbr = %s\n",nuevo.fecha_creacion_mbr);
-                //printf("disco.tamano_mbr = %d\n",nuevo.tamano_mbr);
-                //fseek(arch1,0,SEEK_SET);
-                //fwrite(&nuevo,sizeof(MBR),1,arch1);
 
-
-
-                fclose(arch1);
-                printf("Disco Creado\n");
             }
         }else{
             printf("ERROR: Faltan parametros obligatorios.\n");
@@ -485,7 +487,7 @@ void ManejarParticiones(char* com){
             // *********** SE ELIMINA PARTICION **********
             if((flagname == 1)&&(flagpath == 1)){
                 char confirmar[10];
-                printf("Desea Eliminar El Disco? [S/N]: ");
+                printf("Desea Eliminar La Particion? [S/N]: ");
                 fgets(confirmar,10,stdin);
                 confirmar[0] = tolower(confirmar[0]);
                 for(int a = 1; a < 10; a++){
@@ -495,7 +497,7 @@ void ManejarParticiones(char* com){
                     FILE *disco = fopen(path,"rb+");
                     if(ExistsPartition(disco,name) == 1){
                         Delete_Partition(disco,name,elim);
-                        VerParticiones(disco);
+                        //VerParticiones(disco);
 
                     }else{
                         printf("ERROR: La Particion A Eliminar No Existe.\n");
@@ -517,7 +519,7 @@ void ManejarParticiones(char* com){
                     }
                     //printf("ADD: %d\n",add);
                     ModifySize(arch,name,add);
-                    VerParticiones(arch);
+                    //VerParticiones(arch);
                 }else{
                     printf("ERROR: La Particion A Modificar No Existe.\n");
                 }
@@ -528,20 +530,23 @@ void ManejarParticiones(char* com){
         }else if((flagadd == 0)&&(flagdelete == 0)){
             // *********** SE CREA LA PARTICION **********
             if((flagname == 1)&&(flagpath == 1)&&(flagsize == 1)){
-                FILE *disco = fopen(path,"rb+");
-                //MBR auxPart;
-                //fseek(disco,0,SEEK_SET);
-                //fread(&auxPart,sizeof(MBR),1,disco);
-                if(ExistsPartition(disco,name) == 0){
-                    CreateParticion(disco,size,fit,name,type);
-                    VerParticiones(disco);
+                if(size >= (2*1024*1024)){
+                    FILE *disco = fopen(path,"rb+");
+                    //MBR auxPart;
+                    //fseek(disco,0,SEEK_SET);
+                    //fread(&auxPart,sizeof(MBR),1,disco);
+                    if(ExistsPartition(disco,name) == 0){
+                        CreateParticion(disco,size,fit,name,type);
+                        //VerParticiones(disco);
+                    }else{
+                        printf("ERROR: Ya Existe Una Particion Con Ese Nombre.\n");
+                    }
+
+                    fclose(disco);
+
                 }else{
-                    printf("ERROR: Ya Existe Una Particion Con Ese Nombre.\n");
+                    printf("ERROR: El Tamaño De La Particion Debe Ser Mayor a 10 Mb\n");
                 }
-
-                fclose(disco);
-
-
             }else{
                 printf("ERROR: Faltan Parametros Obligatorios para Crear Particion.\n");
             }
@@ -859,6 +864,117 @@ void Reports(char* com){
     }
 }
 
+void LeerArchivo(char* com){
+    // ************** VARIABLES ***************
+    char path[200];
+    // ************** AUXILIARES **************
+    char auxPath[200];
+    // ************** BANDERAS ****************
+    int flagPath = 0;
+    int error = 0;
+    // ************** SEPARAR VALORES *********
+    char* parametro;
+    parametro = strtok(com," ::");
+    while(parametro != NULL){
+        if(strcasecmp(parametro,"-path")==0){
+            parametro = strtok(NULL," ::");
+            strcpy(auxPath,parametro);
+            for(int a = 0; a < 200; a++){
+                path[a] = '\0';
+            }
 
+            auxPath[0] = ' ';
 
+            while(strstr(auxPath,"\"")==NULL){
+                parametro = strtok(NULL, " ::");
+                //printf("%s\n",parametro);
+                strcat(auxPath," ");
+                strcat(auxPath,parametro);
 
+            }
+            auxPath[0] = '\"';
+
+            int c = 0;
+            for(int b = 1; b < (strlen(auxPath)-1); b++){
+                path[c] = auxPath[b];
+                c++;
+            };
+
+            if(strstr(path,".sh")!=NULL){
+                FILE *arch = fopen(path,"r");
+                if(arch){
+                    fclose(arch);
+                }else{
+                    printf("ERROR: El Script Seleccionado No Existe.\n");
+                    error = 1;
+                    break;
+                }
+            }else{
+                error = 1;
+                printf("ERROR: Extension del Script No Admitido.\n");
+            }
+            flagPath = 1;
+
+        }else if(strcasecmp(parametro,"exec")==0){
+
+        }else{
+            printf("ERROR: Parametro \"%s\" no admitido para esta funcion.\n",parametro);
+            error = 1;
+            break;
+        }
+
+        parametro = strtok(NULL," ::");
+    }
+
+    if(error == 0){
+        EjecutarArchivo(path);
+    }
+
+}
+
+void EjecutarArchivo(char* path){
+    FILE *doc = fopen(path,"r");
+    char* linea;
+    size_t lin = 0;
+    char comFinal[500];
+    strcpy(comFinal,"");
+    int ejecutar = 0;
+    while(getline(&linea,&lin,doc)!=-1){
+        int pos = strlen(linea) - 2;
+        //printf("%c",linea[pos]);
+        if(linea[pos]!='\\'){
+            ejecutar = 1;
+        }else{
+            linea[pos] = '\0';
+        }
+        linea[pos+1] = '\0';
+        if(linea[0] != '#'){
+            strcat(comFinal,linea);
+        }
+        if(ejecutar == 1){
+            printf("%s\n",comFinal);
+            int i = 0;
+            char comAux[500];
+            strcpy(comAux,comFinal);
+            while(comAux[i]){
+                comAux[i] = (tolower(comAux[i]));
+                i++;
+            }
+            if(strstr(comAux,"mkdisk")!=NULL){
+                CrearDisco(comFinal);
+            }else if(strstr(comAux,"rmdisk")!=NULL){
+                BorrarDisco(comFinal);
+            }else if(strstr(comAux,"fdisk")!=NULL){
+                ManejarParticiones(comFinal);
+            }else if(strstr(comAux,"umount")!=NULL){
+                UMount(comFinal);
+            }else if(strstr(comAux,"mount")!=NULL){
+                Montar(comFinal);
+            }else if(strstr(comAux,"rep")!=NULL){
+                Reports(comFinal);
+            }
+            strcpy(comFinal,"");
+            ejecutar = 0;
+        }
+    }
+}
