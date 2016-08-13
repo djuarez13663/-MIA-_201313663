@@ -845,8 +845,9 @@ void MBRReport(char* path, char* id){
     // ************* GENERAR LA GRAFICA Y ABRIRLA ********************
     char comando[500];
     strcpy(comando,"");
-    strcat(comando,"dot -Tpng Reporte.dot -o ");
+    strcat(comando,"dot -Tpng Reporte.dot -o \"");
     strcat(comando, path);
+    strcat(comando,"\"");
     system(comando);
     strcpy(comando,"");
     strcat(comando,"viewnior \"");
@@ -961,8 +962,9 @@ void DiskReport(char* path, char* id){
     // ************* GENERAR LA GRAFICA Y ABRIRLA ********************
     char comando[500];
     strcpy(comando,"");
-    strcat(comando,"dot -Tpng Reporte.dot -o ");
+    strcat(comando,"dot -Tpng Reporte.dot -o \"");
     strcat(comando, path);
+    strcat(comando,"\"");
     system(comando);
     strcpy(comando,"");
     strcat(comando,"viewnior \"");

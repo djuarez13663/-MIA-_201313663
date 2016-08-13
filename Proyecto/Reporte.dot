@@ -1,5 +1,106 @@
 digraph g{
-node[shape = record];
-label = "Reporte DISK d1.dsk";
+node[shape = box];
+label = "Reporte MBR D1.dsk";
 labelloc = "t";
-struct [shape = record, label = "MBR d1.dsk &#92;n mbr_size: 104857600 &#92;n mbr_disk_signature: 147 &#92;n mbr_fecha_creacion: 12/08/16 10:04:09|part_name: P1 &#92;n part_start: 249 &#92;n part_size: 20971520 &#92;n part_type: P|part_name: P2 &#92;n part_start: 20971769 &#92;n part_size: 15728640 &#92;n part_type: P|part_name: P5 &#92;n part_start: 36700409 &#92;n part_size: 2097152 &#92;n part_type: P|Espacio Libre &#92;n 13631488 bytes|{part_name: Ext &#92;n part_start: 52429049 &#92;n part_size: 20971520 &#92;n part_type: E|{part_name: L15 &#92;n part_start: 52429081 &#92;n part_size: 3145728 &#92;n part_next: 55574809|part_name: L10 &#92;n part_start: 55574809 &#92;n part_size: 2097152 &#92;n part_next: 57671961|part_name: L5 &#92;n part_start: 57671961 &#92;n part_size: 2097152 &#92;n part_next: -1|Espacio Libre: &#92;n 13631456 bytes}}|Espacio Libre &#92;n 31457031 bytes"];}
+"Record" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>MBR D1.dsk</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>mbr_size</b></td><td>73400320</td></tr>
+<tr><td><b>mbr_fecha_creacion</b></td><td>12/08/16 22:27:39</td></tr>
+<tr><td><b>mbr_disk_signature</b></td><td>905</td></tr>
+<tr><td><b>part_status_1</b></td><td>1</td></tr>
+<tr><td><b>part_type_1</b></td><td><b>P</b></td></tr>
+<tr><td><b>part_fit_1</b></td><td><b>F</b></td></tr>
+<tr><td><b>part_start_1</b></td><td>249</td></tr>
+<tr><td><b>part_size_1</b></td><td>5242880</td></tr>
+<tr><td><b>part_name_1</b></td><td>PRI 1</td></tr>
+<tr><td><b>part_status_2</b></td><td>1</td></tr>
+<tr><td><b>part_type_2</b></td><td><b>P</b></td></tr>
+<tr><td><b>part_fit_2</b></td><td><b>F</b></td></tr>
+<tr><td><b>part_start_2</b></td><td>5243129</td></tr>
+<tr><td><b>part_size_2</b></td><td>5242880</td></tr>
+<tr><td><b>part_name_2</b></td><td>PRI 2</td></tr>
+<tr><td><b>part_status_3</b></td><td>1</td></tr>
+<tr><td><b>part_type_3</b></td><td><b>E</b></td></tr>
+<tr><td><b>part_fit_3</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_3</b></td><td>10486009</td></tr>
+<tr><td><b>part_size_3</b></td><td>52428800</td></tr>
+<tr><td><b>part_name_3</b></td><td>EXT</td></tr>
+<tr><td><b>part_status_4</b></td><td>1</td></tr>
+<tr><td><b>part_type_4</b></td><td><b>P</b></td></tr>
+<tr><td><b>part_fit_4</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_4</b></td><td>62914809</td></tr>
+<tr><td><b>part_size_4</b></td><td>5242880</td></tr>
+<tr><td><b>part_name_4</b></td><td>PRI 3</td></tr>
+</table>>];
+"Record1" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_1</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_1</b></td><td>1</td></tr>
+<tr><td><b>part_fit_1</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_1</b></td><td>10486041</td></tr>
+<tr><td><b>part_size_1</b></td><td>5242880</td></tr>
+<tr><td><b>part_next_1</b></td><td>15728921</td></tr>
+<tr><td><b>part_name_1</b></td><td>LOG 1</td></tr>
+</table>>];
+"Record2" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_2</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_2</b></td><td>1</td></tr>
+<tr><td><b>part_fit_2</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_2</b></td><td>15728921</td></tr>
+<tr><td><b>part_size_2</b></td><td>5242880</td></tr>
+<tr><td><b>part_next_2</b></td><td>20971801</td></tr>
+<tr><td><b>part_name_2</b></td><td>LOG 2</td></tr>
+</table>>];
+"Record3" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_3</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_3</b></td><td>1</td></tr>
+<tr><td><b>part_fit_3</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_3</b></td><td>20971801</td></tr>
+<tr><td><b>part_size_3</b></td><td>5242880</td></tr>
+<tr><td><b>part_next_3</b></td><td>26214681</td></tr>
+<tr><td><b>part_name_3</b></td><td>LOG 3</td></tr>
+</table>>];
+"Record4" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_4</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_4</b></td><td>1</td></tr>
+<tr><td><b>part_fit_4</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_4</b></td><td>26214681</td></tr>
+<tr><td><b>part_size_4</b></td><td>9437184</td></tr>
+<tr><td><b>part_next_4</b></td><td>36700441</td></tr>
+<tr><td><b>part_name_4</b></td><td>LOG 45</td></tr>
+</table>>];
+"Record5" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_5</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_5</b></td><td>1</td></tr>
+<tr><td><b>part_fit_5</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_5</b></td><td>36700441</td></tr>
+<tr><td><b>part_size_5</b></td><td>5242880</td></tr>
+<tr><td><b>part_next_5</b></td><td>41943321</td></tr>
+<tr><td><b>part_name_5</b></td><td>LOG 6</td></tr>
+</table>>];
+"Record6" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_6</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_6</b></td><td>1</td></tr>
+<tr><td><b>part_fit_6</b></td><td><b>W</b></td></tr>
+<tr><td><b>part_start_6</b></td><td>41943321</td></tr>
+<tr><td><b>part_size_6</b></td><td>5242880</td></tr>
+<tr><td><b>part_next_6</b></td><td>47186201</td></tr>
+<tr><td><b>part_name_6</b></td><td>LOG 7</td></tr>
+</table>>];
+"Record7" [label = <<table border = "1" cellspacing = "0">
+<tr><td colspan = "2"><b>EBR_7</b></td></tr>
+<tr><td><b>Nombre</b></td><td><b>Valor</b></td></tr>
+<tr><td><b>part_status_7</b></td><td>1</td></tr>
+<tr><td><b>part_fit_7</b></td><td><b>B</b></td></tr>
+<tr><td><b>part_start_7</b></td><td>47186201</td></tr>
+<tr><td><b>part_size_7</b></td><td>5242880</td></tr>
+<tr><td><b>part_next_7</b></td><td>-1</td></tr>
+<tr><td><b>part_name_7</b></td><td>LOG 8</td></tr>
+</table>>];
+}

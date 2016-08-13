@@ -545,7 +545,7 @@ void ManejarParticiones(char* com){
                     fclose(disco);
 
                 }else{
-                    printf("ERROR: El Tamaño De La Particion Debe Ser Mayor a 10 Mb\n");
+                    printf("ERROR: El Tamaño De La Particion Debe Ser Mayor a 2 Mb\n");
                 }
             }else{
                 printf("ERROR: Faltan Parametros Obligatorios para Crear Particion.\n");
@@ -762,6 +762,7 @@ void Reports(char* com){
     // **************** AUXILIARES ***********
     char auxPath[200];
     char auxId[50];
+    char auxName[50];
     // **************** BANDERAS *************
     int flagPath = 0;
     int flagName = 0;
@@ -774,7 +775,16 @@ void Reports(char* com){
         if(strcasecmp(parametro,"-name")==0){
             int nombreValido = 0;
             parametro = strtok(NULL," ::");
-            strcpy(name,parametro);
+            for(int e = 0; e < 50; e++){
+                name[e] = '\0';
+            }
+            strcpy(auxName,parametro);
+            int d = 0;
+            for(int c = 1; c < (strlen(auxName) - 1); c++){
+                name[d] = auxName[c];
+                d++;
+            }
+
             for(int a = 0; a < 2; a++){
                 if(strcasecmp(name,NombreReportes[a])==0){
                     nombreValido = 1;
@@ -837,7 +847,7 @@ void Reports(char* com){
         char* dir = strtok(auxPath,"/");
 
         while(dir != NULL){
-            if(strstr(dir,".png")==NULL){
+            if((strstr(dir,".png")==NULL)&&(strstr(dir,".jpg")==NULL)){
                 strcat(PathDir,dir);
                 strcat(PathDir,"/");
             }
@@ -937,10 +947,13 @@ void EjecutarArchivo(char* path){
     char* linea;
     size_t lin = 0;
     char comFinal[500];
-    strcpy(comFinal,"");
+    //strcpy(comFinal,"");
     int ejecutar = 0;
+    for(int z = 0; z < 500; z++){
+        comFinal[z] = '\0';
+    }
     while(getline(&linea,&lin,doc)!=-1){
-        int pos = strlen(linea) - 2;
+        int pos = strlen(linea) - 3;
         //printf("%c",linea[pos]);
         if(linea[pos]!='\\'){
             ejecutar = 1;
@@ -948,6 +961,7 @@ void EjecutarArchivo(char* path){
             linea[pos] = '\0';
         }
         linea[pos+1] = '\0';
+        linea[pos+2] = '\0';
         if(linea[0] != '#'){
             strcat(comFinal,linea);
         }
@@ -973,7 +987,9 @@ void EjecutarArchivo(char* path){
             }else if(strstr(comAux,"rep")!=NULL){
                 Reports(comFinal);
             }
-            strcpy(comFinal,"");
+            for(int z = 0; z < 500; z++){
+                comFinal[z] = '\0';
+            }
             ejecutar = 0;
         }
     }
